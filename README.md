@@ -1,5 +1,5 @@
 # 🧠 OS Scheduler Simulator
-A mini operating system scheduler simulation project that implements and compares **FIFO (First In First Out)**, **Round Robin**, and **Multilevel Queue** scheduling algorithms.
+A mini operating system scheduler simulation project that implements and compares **FIFO (First In First Out)**, **Round Robin**, **Priority Preemptive**, and **Multilevel Queue** scheduling algorithms.
 
 ---
 
