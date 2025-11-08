@@ -1,19 +1,18 @@
 #include <stdio.h>
 #include <queue>
+#include <map>
 #include <scheduler.h>
 #include <algorithm>
 using namespace std;
 
-vector<execute> rr_scheduler(vector<process> processes){
+vector<execute> rr_scheduler(vector<process> processes, int Q){
     int N = processes.size();
-    int Q = 3;
 
-    sort(processes.begin(), processes.end(), [](process p1, process p2){
-        return p1.arrival < p2.arrival;
-    });
+    sort(processes.begin(), processes.end(), comp);
 
+    map<int, int> time_executed;
     vector<execute> result;
-
+    
     queue<process> q;
     for (process p : processes) q.push(p);
 
