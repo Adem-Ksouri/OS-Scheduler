@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 using namespace std;
 
 struct process{
@@ -34,6 +35,8 @@ struct event {
     int t; 
     string comment;  
 };
+
+map<int, int> time_executed;
 
 vector<execute> fifo_scheduler(vector<process> processes);
 vector<execute> rr_scheduler(vector<process> processes);
