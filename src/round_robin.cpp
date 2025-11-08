@@ -30,18 +30,20 @@ vector<execute> rr_scheduler(vector<process> processes, int Q){
         int ts = time_executed[p.pid];
         int te = min(ts + Q, p.exec_time);
 
-        time_executed[p.pid] += te - ts;
-        current_time += te - ts;
-
+        int execution_time = te - ts;
+        time_executed[p.pid] += execution_time;
+        
         vector<event> current_events;
         int s = lower_bound(p.events.begin(), p.events.end(), ts) - p.events.begin();
         for (int i = s; i < (int)p.events.size(); i++){
-            if (p.events[i].t >= te) break;
+            if (p.events[i].t > te) break;
             current_events.push_back(p.events[i]);
         }
-
-        execute exec(p, ts, te, current_events);
+        
+        execute exec(p, current_time, current_time + execution_time, current_events);
         result.push_back(exec);
+        
+        current_time += execution_time;
 
         // put the newely arravied processes in queue
         while (ind < N && processes[ind].arrival <= current_time)
