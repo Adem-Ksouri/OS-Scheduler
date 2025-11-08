@@ -5,14 +5,10 @@
 #include <vector>
 using namespace std;
 
-struct process{
-    int pid;
-    int ppid;
-    string name;
-    int arrival;
-    int exec_time;
-    int priority;
-    vector<event> events;
+struct event {
+    // after t seconds of execution, the process will print a comment
+    int t; 
+    string comment;  
 };
 
 struct execute {
@@ -29,19 +25,33 @@ struct execute {
     }
 };
 
-struct event {
-    // after t seconds of execution, the process will print a comment
-    int t; 
-    string comment;  
-};
+struct process{
+    int pid;
+    int ppid;
+    string name;
+    int arrival;
+    int exec_time;
+    int priority;
+    vector<event> events;
 
-bool comp(process p1, process p2){
-    return p1.arrival < p2.arrival;
-}
+    bool operator<(const process &other) const {
+        return arrival < other.arrival;
+    }
+
+    vector<event> getEvents(int tl, int tr) {
+        int st = lower_bound(events.begin(), events.end(), tl) - events.begin();
+        vector<event> result;
+        while (st < (int)events.size()){
+            if (events[st].t > tr) break;
+            result.push_back(events[st++]);
+        }
+        return result;
+    }
+};
 
 vector<execute> fifo_scheduler(vector<process> processes);
 vector<execute> rr_scheduler(vector<process> processes);
 vector<execute> pp_scheduler(vector<process> processes);
-vector<execute> multilevel_scheduler(vector<process> processes);
+vector<execute> multilevel_scheduler(vector<process> processes, int quantum, int waiting_time);
 
 #endif

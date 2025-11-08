@@ -7,7 +7,7 @@ using namespace std;
 vector<execute> fifo_scheduler(vector<process> processes){
     int n = processes.size();
 
-    sort(processes.begin(), processes.end(), comp);
+    sort(processes.begin(), processes.end());
 
     vector<execute> result;
 
