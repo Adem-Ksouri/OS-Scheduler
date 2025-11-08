@@ -16,7 +16,14 @@ vector<execute> rr_scheduler(vector<process> processes, int Q){
     queue<process> q;
     for (process p : processes) q.push(p);
 
-    while (!q.empty()){
+    int ind = 0, current_time = 0;
+    while (ind < N || !q.empty()){
+        // if there is no processes to execute, bring the first process from the remining processes
+        if (q.empty()){
+            q.push(processes[ind]);
+            current_time = processes[ind++].arrival;
+        }
+
         process p = q.front();
         q.pop();
 
@@ -24,7 +31,8 @@ vector<execute> rr_scheduler(vector<process> processes, int Q){
         int te = min(ts + Q, p.exec_time);
 
         time_executed[p.pid] += te - ts;
-        
+        current_time += te - ts;
+
         vector<event> current_events;
         int s = lower_bound(p.events.begin(), p.events.end(), ts) - p.events.begin();
         for (int i = s; i < (int)p.events.size(); i++){
@@ -35,6 +43,11 @@ vector<execute> rr_scheduler(vector<process> processes, int Q){
         execute exec(p, ts, te, current_events);
         result.push_back(exec);
 
+        // put the newely arravied processes in queue
+        while (ind < N && processes[ind].arrival <= current_time)
+            q.push(processes[ind++]);
+
+        // put the current process if still have remaining execution time
         if (time_executed[p.pid] < p.exec_time)
             q.push(p);
     }

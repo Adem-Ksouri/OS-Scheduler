@@ -40,7 +40,7 @@ bool comp(process p1, process p2){
 }
 
 vector<execute> fifo_scheduler(vector<process> processes);
-vector<execute> rr_scheduler(vector<process> processes);
+vector<execute> rr_scheduler(vector<process> processes, int Q);
 vector<execute> pp_scheduler(vector<process> processes);
 vector<execute> multilevel_scheduler(vector<process> processes);
 
