@@ -4,10 +4,6 @@
 #include <algorithm>
 using namespace std;
 
-bool comp(process p1, process p2){
-    return p1.arrival < p2.arrival;
-}
-
 vector<execute> fifo_scheduler(vector<process> processes){
     int n = processes.size();
 

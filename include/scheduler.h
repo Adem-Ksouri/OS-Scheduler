@@ -35,6 +35,10 @@ struct event {
     string comment;  
 };
 
+bool comp(process p1, process p2){
+    return p1.arrival < p2.arrival;
+}
+
 vector<execute> fifo_scheduler(vector<process> processes);
 vector<execute> rr_scheduler(vector<process> processes);
 vector<execute> pp_scheduler(vector<process> processes);
