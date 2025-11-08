@@ -12,11 +12,32 @@ struct process{
     int arrival;
     int exec_time;
     int priority;
+    vector<event> events;
 };
 
-void fifo_scheduler(vector<process> processes);
-void rr_scheduler(vector<process> processes);
-void pp_scheduler(vector<process> processes);
-void multilevel_scheduler(vector<process> processes);
+struct execute {
+    process p;
+    int tl;
+    int tr;
+    vector<event> events;
+
+    execute(process _p, int _tl, int _tr, vector<event> _events){
+        p = _p;
+        tl = _tl;
+        tr = _tr;
+        events = _events;
+    }
+};
+
+struct event {
+    // after t seconds of execution, the process will print a comment
+    int t; 
+    string comment;  
+};
+
+vector<execute> fifo_scheduler(vector<process> processes);
+vector<execute> rr_scheduler(vector<process> processes);
+vector<execute> pp_scheduler(vector<process> processes);
+vector<execute> multilevel_scheduler(vector<process> processes);
 
 #endif
