@@ -5,13 +5,26 @@
 #include <vector>
 using namespace std;
 
-struct process{
+struct process {
     int pid;
     int ppid;
     string name;
     int arrival;
     int exec_time;
     int priority;
+    vector<event> p_events;
+};
+
+struct execute {
+    process p;
+    int tl;
+    int tr;
+    vector<event> events;
+};
+
+struct event {
+    int time;
+    string comment;  
 };
 
 void fifo_scheduler(vector<process> processes);
