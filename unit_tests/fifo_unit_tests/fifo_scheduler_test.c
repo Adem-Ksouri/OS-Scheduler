@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/scheduler.h"
+#include "../../include/scheduler.h"
 
 int main() {
     freopen("unit_tests/output.txt", "w", stdout);
