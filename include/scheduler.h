@@ -1,47 +1,44 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include <string>
-#include <vector>
-using namespace std;
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
-struct process{
+// event type
+typedef struct {
+    int t;  // after t seconds of execution, the process will print a comment
+    char comment[250];
+} event;
+
+// process type
+typedef struct{
     int pid;
     int ppid;
-    string name;
+    char name[20];
     int arrival;
     int exec_time;
     int priority;
-    vector<event> events;
-};
+    int nbEvents;
+    event* events;
+} process;
 
-struct execute {
+// execute type
+typedef struct {
     process p;
-    int tl;
-    int tr;
-    vector<event> events;
+    int ts;
+    int te;
+    event* events;
+} execute;
 
-    execute(process _p, int _tl, int _tr, vector<event> _events){
-        p = _p;
-        tl = _tl;
-        tr = _tr;
-        events = _events;
-    }
-};
+int compare_event(const void* a, const void* b);
+event* getEvents(process p, int tl, int tr, int *out_cnt);
+int compare_process(const void* a, const void* b);
+execute make_execute(process p, int tl, int tr, event* events);
 
-struct event {
-    // after t seconds of execution, the process will print a comment
-    int t; 
-    string comment;  
-};
-
-bool comp(process p1, process p2){
-    return p1.arrival < p2.arrival;
-}
-
-vector<execute> fifo_scheduler(vector<process> processes);
-vector<execute> rr_scheduler(vector<process> processes);
-vector<execute> pp_scheduler(vector<process> processes);
-vector<execute> multilevel_scheduler(vector<process> processes);
+execute* fifo_scheduler(process* processes, int n, int *out_cnt);
+execute* rr_scheduler(process* processes, int n, int *out_cnt);
+execute* pp_scheduler(process* processes, int n, int *out_cnt);
+execute* multilevel_scheduler(process* processes, int n, int quantum, int *out_cnt);
 
 #endif
