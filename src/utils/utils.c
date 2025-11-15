@@ -1,4 +1,4 @@
-#include "../include/scheduler.h"
+#include "../../include/scheduler.h"
 
 int compare_process(const void* a, const void* b) {
     const process* e1 = (const process*)a;
