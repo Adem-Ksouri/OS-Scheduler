@@ -1,7 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-
 // event type
 typedef struct {
     int t;  // after t seconds of execution, the process will print a comment

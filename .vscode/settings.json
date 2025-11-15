@@ -1,0 +1,31 @@
+{
+    "files.associations": {
+        "list": "cpp",
+        "helpers.h": "c",
+        "array": "c",
+        "atomic": "c",
+        "bit": "c",
+        "charconv": "c",
+        "chrono": "c",
+        "compare": "c",
+        "algorithm": "c",
+        "memory_resource": "c",
+        "numeric": "c",
+        "optional": "c",
+        "random": "c",
+        "cmath": "c",
+        "format": "c",
+        "functional": "c",
+        "istream": "c",
+        "new": "c",
+        "ranges": "c",
+        "ratio": "c",
+        "span": "c",
+        "string_view": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "variant": "c",
+        "cstdlib": "c"
+    }
+}
