@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../include/scheduler.h"
+#include "../../Include/scheduler.h"
 
 execute* fifo_scheduler(process* processes, int n, int* out_count) {
     qsort(processes, n, sizeof(process), compare_process);
