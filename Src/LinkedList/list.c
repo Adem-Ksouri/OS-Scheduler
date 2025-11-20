@@ -1,14 +1,21 @@
 
 #include <stdlib.h>
-#include "../../Include/linked_list_process.h"
+#include "../../Include/list.h"
 
-void add_head(p_list *l, process p){
+list* create_list(){
+    list* l = (list*)malloc(sizeof(list));
+    l->sz = 0;
+    l->head = l->tail = NULL;
+    return l;
+}
+
+void add_head(list *l, void *dataToAdd){
     if (l == NULL) return;
 
-    p_node* nw = (p_node*)malloc(sizeof(p_node));
+    node* nw = (node*)malloc(sizeof(node));
     if (!nw) return;
 
-    nw->p.pid = p.pid;
+    nw->data = dataToAdd;
     nw->prev = NULL;
     nw->suiv = l->head;
 
@@ -21,16 +28,17 @@ void add_head(p_list *l, process p){
     l->sz++;
 }
 
-void add_tail(p_list *l, process p) {
-    p_node* nw = (p_node*)malloc(sizeof(p_node));
+void add_tail(list *l, void *dataToAdd) {
+    if (l == NULL) return;
+
+    node* nw = (node*)malloc(sizeof(node));
     if (!nw) return;
 
-    nw->p = p;
+    nw->data = dataToAdd;
     nw->prev = NULL;
     nw->suiv = l->head;
 
-    if (l == NULL){
-        l = (p_list*)malloc(sizeof(p_list));  
+    if (l->sz == 0){
         l->head = l->tail = nw;
     }else {
         l->tail->suiv = nw;
@@ -39,30 +47,30 @@ void add_tail(p_list *l, process p) {
     l->sz++;
 }
 
-void del_head(p_list *l){
+void del_head(list *l){
     if (l == NULL || l->sz == 0) 
         return;
     if (l->sz == 1){
         l->head = l->tail = NULL;
-        l->sz = 0;
     }else {
         l->head = l->head->suiv;
-        l->sz--;
+        l->head->prev = NULL;
     }
+    l->sz--;
 }
 
-void del_tail(p_list *l){
+void del_tail(list *l){
     if (l == NULL || l->sz == 0) 
         return;
     if (l->sz == 1){
         l->head = l->tail = NULL;
-        l->sz = 0;
     }else {
         l->tail = l->tail->prev;
-        l->sz--;
+        l->tail->suiv = NULL;
     }
+    l->sz--;
 }
 
-int getsz(p_list *l){
+int getsz(list *l){
     return l->sz;
 }
