@@ -20,6 +20,8 @@ void add_head(list *l, void *dataToAdd);
 void add_tail(list *l, void *dataToAdd);
 void del_head(list *l);
 void del_tail(list *l);
+void* get_head(list *l);
+void* get_tail(list *l);
 int getsz(list *l);
 
 #endif

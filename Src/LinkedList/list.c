@@ -71,6 +71,20 @@ void del_tail(list *l){
     l->sz--;
 }
 
+// Return the data at the head of the list
+void* get_head(list* l) {
+    if (l == NULL || l->head == NULL)
+        return NULL;  // list is empty
+    return l->head->data;
+}
+
+// Return the data at the tail of the list
+void* get_tail(list* l) {
+    if (l == NULL || l->tail == NULL)
+        return NULL;  // list is empty
+    return l->tail->data;
+}
+
 int getsz(list *l){
     return l->sz;
 }
