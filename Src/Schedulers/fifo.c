@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../include/scheduler.h"
+#include "../../Include/scheduler.h"
 
 execute* fifo_scheduler(process* processes, int n, int* out_count) {
     qsort(processes, n, sizeof(process), compare_process);
@@ -15,7 +15,7 @@ execute* fifo_scheduler(process* processes, int n, int* out_count) {
 
         int te = ts + processes[i].exec_time;
 
-        result[i].p = processes[i];
+        result[i].p = &processes[i];
         result[i].ts = ts;
         result[i].te = te;
         result[i].events = processes[i].events;

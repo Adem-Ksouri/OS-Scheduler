@@ -1,4 +1,4 @@
-#include "../../include/scheduler.h"
+#include "../../Include/scheduler.h"
 
 int compare_process(const void* a, const void* b) {
     const process* e1 = (const process*)a;
@@ -37,7 +37,7 @@ event* getEvents(process p, int tl, int tr, int* out_count) {
     return result;
 }
 
-execute make_execute(process p, int ts, int te, event* events) {
+execute make_execute(process* p, int ts, int te, event* events) {
     execute exc;
     exc.p = p;
     exc.ts = ts;
