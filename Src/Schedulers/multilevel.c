@@ -1,104 +1,121 @@
-// #include <stdio.h>
-// #include <vector>
-// #include <map>
-// #include <algorithm>
-// #include "../include/scheduler.h"
-// using namespace std;
+#include <stdio.h>
+#include <stdlib.h>
+#include "../../Include/scheduler.h"
+#include "../Queue/queue.c"
+#include "../LinkedList/list.c"
 
-// // How much time a process executed
-// map<int, int> executed_time;
+typedef struct{
+    process p;
+    int rem_time;
+    int cpu_usage;
+} multilevel_process;
 
-// // How much time a process waited since last execution
-// map<process, int> waiting;
+void add_to_queue(queue* q, multilevel_process p){
+    queue tmp = create_queue();
+    while (size(q) > 0){
+        multilevel_process* curr = front(q);
+        if (curr->rem_time < p.rem_time){
+            q = pop(q);
+            tmp = push(tmp, curr);
+        }
+        else break;
+    }
+    q = puhs(q, p);
+    while (size(tmp) > 0){
+        multilevel_process* curr = front(tmp);
+        tmp = pop(tmp);
+        q = push(q, curr);
+    }
+}
 
-// // For each priority, we have a queue of processes
-// map<int, vector<process>> queues;
+int get_higher_priority(queue* queues, int nbPriority){
+    for (int i = nbPriority - 1; i >= 0; i--){
+        if (size(queues[i]) > 0)
+            return i;
+    }
+    return -1;
+}
 
-// int ts = 0;
-// int te; 
+event* get_events(event* events, int nbEvents, int l, int r){
+    int cnt = 0;
+    for (int i = 0; i < nbEvents; i++)
+        if (events[i].t >= l && events[i].t <= r) cnt++;
 
-// void ins(process p){
-//     int pr = p.priority;
-//     queues[pr].insert(queues[pr].begin(), p);
-// }
+    event* res = (event*)malloc(cnt * sizeof(event));
+    cnt = 0;
+    for (int i = 0; i < nbEvents; i++)
+        if (events[i].t >= l && events[i].t <= r)
+            res[cnt++] = events[i];
 
-// process del(vector<process> &vec, int pid) {
-//     int idx = -1;
-//     for (int i = 0; i < vec.size(); i++)
-//         if (vec[i].pid == pid) {
-//             idx = i;
-//             break;
-//         }
-//     process ret = vec[idx];
-//     vec.erase(vec.begin() + idx);
-//     return ret;
-// }
+    return res;
+}
 
-// void update_waiting_processes(process cur_p, int exec_time, int waiting_time) {
-//     // Could be ready processes having priority changed
-//     for (auto [p, wt] : waiting){
-//         if (p.pid == cur_p.pid) continue;
-//         if (wt + exec_time == waiting_time){
-//             // priority changed
-//             waiting[p] = 0;
-            
-//             int pr = p.priority;
-//             process del_p = del(queues[pr], p.pid);
-            
-//             pr++;
-//             del_p.priority = pr;
+void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime, list* result, int cpu_usage_limit){
+    while (*currTime < nxtTime){
+        int priority = get_higher_priority(queues, nbPriority);
 
-//             ins(del_p);
-//         }else {
-//             // priority not changed
-//             waiting[p] += exec_time;
-//         }
-//     }
-// }
+        if (priority == -1)
+            break;
 
-// void exec_ready_before_t(vector<execute> &result, int t, int quantum, int waiting_time){
-//     while (!queues.empty()) {
-//         if (ts == t) break;
+        multilevel_process* curr = front(queues[priority]);
+        int exec_time = min(nxtTime - *currTime, curr->rem_time);
 
-//         auto it = prev(queues.end());
-//         if ((*it).second.empty())
-//             break;
-
-//         process cur_p = (*it).second.back();
-//         (*it).second.pop_back();
+        execute execute;
+        execute.p = &curr->p;
+        execute.ts = *currTime;
+        execute.te = *currTime + exec_time;
+        int l = curr->p.exec_time - curr->rem_time;
+        int r = l + exec_time;
+        execute.events = get_events(curr->p.events, curr->p.nbEvents, l, r);
+        add_tail(result, &execute);
         
-//         int rem_time = cur_p.exec_time - executed_time[cur_p.pid];
-//         ts = max(ts, cur_p.arrival);
-//         te = min({ts + quantum, ts + rem_time, t});
-         
-//         waiting[cur_p] = 0;
-
-//         // take the changed process
-//         for (auto [p, wt] : waiting)
-//             if (wt + te - ts >= waiting_time)
-//                 te = min(te, ts + waiting_time - wt);
+        curr->cpu_usage++;
         
-//         executed_time[cur_p.pid] += te - ts;
-//         if (executed_time[cur_p.pid] < cur_p.exec_time)
-//             ins(cur_p);
-//         execute exec = {cur_p, ts, te, cur_p.getEvents(executed_time[cur_p.pid], executed_time[cur_p.pid] + te - ts)};
-//         result.push_back(exec);
+        if (exec_time < curr->rem_time){
+            curr->rem_time -= exec_time;
 
-//         update_waiting_processes(cur_p, te - ts, waiting_time);
-//         ts = te;
-//     }
-// }
+            if (curr->cpu_usage == cpu_usage_limit && priority > 0){
+                add_to_queue(queues[priority - 1], *curr);
+                queues[priority] = pop(queues[priority]);
+                cpu_usage_limit = 0;
+            }
+        }
+        else{
+            queues[priority] = pop(queues[priority]);
+        }
 
-// vector<execute> multilevel_scheduler(vector<process> processes, int quantum, int waiting_time){
-//     int n = processes.size();
-//     sort(processes.begin(), processes.end());
+        *currTime += exec_time;
+    }
+}
+
+execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *out_cnt, int cpu_usage_limit){
+    queue* queues = (queue*)(nbPriority * sizeof(queue));
+    for (int i = 0; i < nbPriority; i++)
+        queues[i] = create_queue();
+
+    list* result = create_list();
     
-//     vector<execute> result;
-//     for (process p : processes){
-//         exec_ready_before_t(result, p.arrival, quantum, waiting_time);
-//         ins(p);
-//         waiting[p] = 0;
-//     }
-//     exec_ready_before_t(result, (int)2e9, quantum, waiting_time);
-//     return result;
-// }
+    qsort(processes, n, sizeof(process), compare_process);
+
+    multilevel_process* multilevel_processes = (multilevel_process*)malloc(n * sizeof(multilevel_process));
+    for (int i = 0; i < n; i++){
+        multilevel_processes[i].cpu_usage = 0;
+        multilevel_processes[i].p = processes[i];
+        multilevel_processes[i].rem_time = processes[i].exec_time;
+    }
+
+    int currTime = 0;
+    for (int i = 0; i < n; i++){
+        int j = i;
+        while (j < n && multilevel_processes[j].p.arrival == currTime){
+            add_to_queue(&queues[multilevel_processes[j].p.priority], multilevel_processes[j]);
+            j++;
+        }
+
+        int nxtTime = j < n ? processes[j].arrival : 1e9;
+        execute_processes(queues, nbPriority, &currTime, nxtTime, result, cpu_usage_limit);
+
+        currTime = nxtTime;
+        i = j - 1;
+    }
+}
