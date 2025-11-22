@@ -20,7 +20,7 @@ process* getProcessesForTest(){
     process* p1 = getProcessForTest(1, 0, "p1", 0, 5, 4, 2, e); 
     process* p2 = getProcessForTest(2, 0, "p2", 2, 2, 1, 2, e); 
     process* p3 = getProcessForTest(3, 0, "p3", 4, 2, 7, 2, e); 
-    process* p4 = getProcessForTest(4, 0, "p4", 8, 7, 2, 2, e); 
+    process* p4 = getProcessForTest(4, 0, "p4", 8, 7, 2, 2, e);
 
     process* input = (process*)malloc(4 * sizeof(process));
     input[0] = *p1;
