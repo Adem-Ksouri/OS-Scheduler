@@ -10,7 +10,7 @@ int main() {
     process* input = getProcessesForTest();
 
     int out_count = 0;
-    execute* output = multilevel_scheduler(input, 4,8,&out_count,3);
+    execute* output = multilevel_scheduler(input, 4,8,&out_count,3,5);
     
 
     for (int i = 0; i < out_count; i++) {
