@@ -16,14 +16,6 @@ int compare_event(const void* a, const void* b) {
     return (e1->t - e2->t);
 }
 
-//compare processes by priority ascending
-int compare_by_priority(const void* a, const void* b) {
-    const process* e1 = (const process*)a;
-    const process* e2 = (const process*)b;
-    
-    return (e1->priority - e2->priority);
-}
-
 event* getEvents(process p, int tl, int tr, int* out_count) {
     int st = 0;
     while (st < p.nbEvents && p.events[st].t < tl) {
