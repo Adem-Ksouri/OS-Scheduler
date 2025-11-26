@@ -27,6 +27,8 @@
         "utility": "c",
         "variant": "c",
         "cstdlib": "c",
-        "queue.h": "c"
+        "queue.h": "c",
+        "scheduler.h": "c",
+        "utils.h": "c"
     }
 }
