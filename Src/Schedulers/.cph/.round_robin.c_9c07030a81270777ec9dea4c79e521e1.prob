@@ -1,1 +1,0 @@
-{"name":"Local: round_robin","url":"c:\\Users\\selma\\Desktop\\OS-Scheduler\\Src\\Schedulers\\round_robin.c","tests":[{"id":1763834911901,"input":"","output":""}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"c:\\Users\\selma\\Desktop\\OS-Scheduler\\Src\\Schedulers\\round_robin.c","group":"local","local":true}

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "../../Include/helpers.h"
-#include "../../Include/map.h"
+#include "../../Include/Helpers.h"
+#include "../../Include/Map.h"
 
 int main(){
     map* mp = map_init();
@@ -18,8 +18,6 @@ int main(){
 
     int val = map_get_value(mp,p1->pid);
     assert(val == 5);
-
-
-    printf("All tests passed!\n");
+    
     return 0;
 }
