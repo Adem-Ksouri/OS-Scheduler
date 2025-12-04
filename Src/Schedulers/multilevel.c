@@ -9,7 +9,6 @@ typedef struct{
     process p;
     int rem_time;
     int cpu_usage;
-    int last_time_to_exec;
 } multilevel_process;
 
 void add_to_queue(queue* q, multilevel_process* p){
@@ -28,29 +27,6 @@ void add_to_queue(queue* q, multilevel_process* p){
         tmp = pop(tmp);
         *q = push(*q, curr);
     }
-}
-void check_waiting_time(queue *queues,int max_waiting_time,int nbpriority,int curr_time){
-for (int i=0;i<nbpriority-1;i++){
-       queue tmp = create_queue();
-       while(size(queues[i])>0){
-        multilevel_process* curr = front(queues[i]);
-        queues[i] = pop(queues[i]);
-        int waiting = curr_time - curr->last_time_to_exec;
-
-        if (waiting >= max_waiting_time) {
-             curr->last_time_to_exec=curr_time;
-            add_to_queue(&queues[i+1], curr);
-            continue;
-        }
-       tmp = push(tmp, curr);
-
-       }
-        while (size(tmp) > 0){
-        multilevel_process* curr = front(tmp);
-        tmp = pop(tmp);
-        queues[i] = push(queues[i], curr);
-    }
-}
 }
 
 int get_higher_priority(queue* queues, int nbPriority){
@@ -75,27 +51,28 @@ event* get_events(event* events, int nbEvents, int l, int r){
     return res;
 }
 
-void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime, list* result, int cpu_usage_limit,int max_waiting_time){
+void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime, list* result, int cpu_usage_limit){
     while (*currTime < nxtTime){
-        check_waiting_time(queues, max_waiting_time, nbPriority, *currTime);
         int priority = get_higher_priority(queues, nbPriority);
 
         if (priority == -1)
             break;
 
         multilevel_process* curr = front(queues[priority]);
-       // int exec_time = min(nxtTime - *currTime, curr->rem_time);
-        int exec_time=1;
-       execute* exec = (execute*)malloc(sizeof(execute));
+        int exec_time = min(nxtTime - *currTime, curr->rem_time);
+
+        execute* exec = (execute*)malloc(sizeof(execute));
         exec->p = &curr->p;
         exec->ts = *currTime;
         exec->te = *currTime + exec_time;
+
         int l = curr->p.exec_time - curr->rem_time;
         int r = l + exec_time;
         exec->events = get_events(curr->p.events, curr->p.nbEvents, l, r);
+
         add_tail(result, exec);
+
         curr->cpu_usage++;
-         curr->last_time_to_exec = *currTime + exec_time;
 
         if (exec_time < curr->rem_time){
             curr->rem_time -= exec_time;
@@ -115,7 +92,7 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
 }
 
 
-execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *out_cnt, int cpu_usage_limit, int max_waiting_time){
+execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *out_cnt, int cpu_usage_limit){
     queue* queues = (queue*)malloc(nbPriority * sizeof(queue));
     for (int i = 0; i < nbPriority; i++)
         queues[i] = create_queue();
@@ -127,7 +104,6 @@ execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *ou
     multilevel_process* multilevel_processes = (multilevel_process*)malloc(n * sizeof(multilevel_process));
     for (int i = 0; i < n; i++){
         multilevel_processes[i].cpu_usage = 0;
-        multilevel_processes[i].last_time_to_exec = processes[i].arrival;
         multilevel_processes[i].p = processes[i];
         multilevel_processes[i].rem_time = processes[i].exec_time;
     }
@@ -139,9 +115,9 @@ execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *ou
             add_to_queue(&queues[multilevel_processes[j].p.priority], &multilevel_processes[j]);
             j++;
         }
-        check_waiting_time(queues,max_waiting_time,nbPriority,currTime);
+        
         int nxtTime = j < n ? processes[j].arrival : 1e9;
-        execute_processes(queues, nbPriority, &currTime, nxtTime, result, cpu_usage_limit,max_waiting_time);
+        execute_processes(queues, nbPriority, &currTime, nxtTime, result, cpu_usage_limit);
 
         currTime = nxtTime;
         i = j - 1;
