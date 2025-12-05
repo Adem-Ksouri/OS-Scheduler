@@ -43,6 +43,7 @@ process* getProcessForTest(int pid, int ppid, char* name, int arrival, int exec_
     strcpy(ret->name, name);
     ret->arrival = arrival;
     ret->exec_time = exec_time;
+    ret->rem_time = exec_time;
     ret->priority = priority;
     ret->nbEvents = nbEvents;
     ret->events = events;

@@ -7,7 +7,6 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
     qsort(processes, n, sizeof(process), compare_process);
 
     queue q = create_queue();
-    map* time_executed = map_init(); 
 
     int run_time;
     int now = 0;
@@ -32,8 +31,7 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
         process* p = front(q);
         pop(q);
 
-        int done = map_get_value(time_executed, p->pid);
-        int remain = p->exec_time - done;
+        int remain = p->rem_time;
 
         if(remain > Q)
             run_time = Q;
@@ -43,7 +41,7 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
         int ts = now;
         int te = now + run_time;
 
-        map_set(time_executed, p->pid, done + run_time);
+        p->rem_time -= run_time; 
 
         // get events
         int cnte;
@@ -58,13 +56,14 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
 
         now = te;
 
-        // not finished
-        if (done + run_time < p->exec_time) {
-            // add newly arrived processes before requeueing
-            while (index < n && processes[index].arrival <= now) {
-                push(q, &processes[index]);
-                index++;
-            }
+        // add newly arrived processes before requeueing
+        while (index < n && processes[index].arrival <= now) {
+            push(q, &processes[index]);
+            index++;
+        }
+
+        // p not finished
+        if (p->rem_time > 0) {
             push(q, p);
         }
     }

@@ -14,6 +14,7 @@ typedef struct{
     char name[20];
     int arrival;
     int exec_time;
+    int rem_time;
     int priority;
     int nbEvents;
     event* events;
