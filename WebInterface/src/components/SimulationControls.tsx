@@ -12,7 +12,7 @@ interface SimulationControlsProps {
   onSpeedChange: (speed: number) => void;
   onAlgorithmChange: (algorithm: SchedulingAlgorithm) => void;
   currentAlgorithm: SchedulingAlgorithm;
-  onToggleEducation: () => void;
+ 
   quantum?: number;
   onQuantumChange?: (quantum: number) => void;
 }
@@ -28,7 +28,7 @@ export function SimulationControls({
   onSpeedChange,
   onAlgorithmChange,
   currentAlgorithm,
-  onToggleEducation,
+ 
   quantum,
   onQuantumChange,
 }: SimulationControlsProps) {
@@ -140,15 +140,7 @@ export function SimulationControls({
           </div>
         )}
 
-        {/* Education Toggle */}
-        <button
-          onClick={onToggleEducation}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-100 hover:bg-teal-200 text-teal-700 rounded-xl transition-colors ml-auto"
-          title="Toggle educational information"
-        >
-          <BookOpen className="w-5 h-5" />
-          Learn
-        </button>
+     
       </div>
     </div>
   );

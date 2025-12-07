@@ -213,21 +213,6 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
                 </div>
               )}
 
-              {/* Algorithm Info Box */}
-              <div className="mb-6 p-4 bg-slate-100 rounded-xl border border-slate-200">
-                <h3 className="text-slate-700 mb-2 flex items-center gap-2">
-                  <Info className="w-4 h-4 text-blue-600" />
-                  Algorithm Info
-                </h3>
-                <p className="text-slate-600">
-                  {algorithm === 'FCFS' && 'Processes are executed in the order they arrive. Non-preemptive.'}
-                  {algorithm === 'SJF' && 'Selects the process with the shortest burst time. Can be preemptive or non-preemptive.'}
-                  {algorithm === 'Priority-Preemptive' && 'Processes are scheduled based on priority. Higher priority can interrupt lower priority.'}
-                  {algorithm === 'Priority-Non-Preemptive' && 'Processes are scheduled based on priority. No interruption once started.'}
-                  {algorithm === 'Round Robin' && 'Each process gets a fixed time quantum. Circular queue implementation.'}
-                </p>
-              </div>
-
               {/* Action Buttons */}
               <div className="space-y-3">
                 <button
@@ -247,12 +232,6 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
                 </button>
               </div>
 
-              {/* Process Count Info */}
-              <div className="mt-6 p-3 bg-white rounded-xl border border-slate-200 text-center">
-                <span className="text-slate-600">
-                  {processes.length} {processes.length === 1 ? 'process' : 'processes'} configured
-                </span>
-              </div>
             </div>
           </div>
         </div>

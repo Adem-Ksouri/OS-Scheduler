@@ -4,7 +4,6 @@ import { Process, SchedulingAlgorithm } from '../App';
 import { SimulationControls } from './SimulationControls';
 import { GanttChart } from './GanttChart';
 import { ProcessMetrics } from './ProcessMetrics';
-import { EducationPanel } from './EducationPanel';
 import { runScheduler, SchedulerResult } from '../utils/scheduler';
 
 interface SimulatorInterfaceProps {
@@ -64,7 +63,7 @@ export function SimulatorInterface({
   const [processStates, setProcessStates] = useState<ProcessState[]>([]);
   const [currentAlgorithm, setCurrentAlgorithm] = useState(algorithm);
   const [currentQuantum, setCurrentQuantum] = useState(quantum);
-  const [showEducation, setShowEducation] = useState(false);
+  
   const [schedulerResult, setSchedulerResult] = useState<SchedulerResult | null>(null);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -314,7 +313,7 @@ export function SimulatorInterface({
               onSpeedChange={setSpeed}
               onAlgorithmChange={setCurrentAlgorithm}
               currentAlgorithm={currentAlgorithm}
-              onToggleEducation={() => setShowEducation(!showEducation)}
+             
               quantum={currentQuantum}
               onQuantumChange={setCurrentQuantum}
             />
@@ -338,15 +337,7 @@ export function SimulatorInterface({
           />
         </div>
 
-        {/* Education Panel */}
-        <AnimatePresence>
-          {showEducation && (
-            <EducationPanel
-              algorithm={currentAlgorithm}
-              onClose={() => setShowEducation(false)}
-            />
-          )}
-        </AnimatePresence>
+    
       </div>
     </motion.div>
   );

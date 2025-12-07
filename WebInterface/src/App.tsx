@@ -12,8 +12,8 @@ export interface Process {
 }
 
 export interface CPUEvent {
-  time: number; // Time within the process execution when this event occurs
-  operation: string; // Description of the CPU operation
+  time: number; 
+  operation: string; 
 }
 
 export type SchedulingAlgorithm = 'FCFS' | 'SJF' | 'Priority-Preemptive' | 'Priority-Non-Preemptive' | 'Round Robin';
