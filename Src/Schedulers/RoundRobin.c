@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "../Include/Scheduler.h"
 #include "../Include/Queue.h"
 

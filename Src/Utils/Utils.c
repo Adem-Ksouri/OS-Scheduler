@@ -4,8 +4,10 @@
 int compare_process(const void* a, const void* b) {
     const process* e1 = (const process*)a;
     const process* e2 = (const process*)b;
+    if(e1->arrival != e2->arrival)
+        return (e1->arrival - e2->arrival); 
 
-    return (e1->arrival - e2->arrival);
+    return (e2->priority - e1->priority);
 }
 
 int compare_event(const void* a, const void* b) {
