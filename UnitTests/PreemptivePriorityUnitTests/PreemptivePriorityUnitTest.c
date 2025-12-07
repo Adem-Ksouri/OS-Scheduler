@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../Include/helpers.h"
-#include "../../Include/scheduler.h"
+#include "../../Include/Helpers.h"
+#include "../../Include/Scheduler.h"
 
 int main() {
-    freopen("output.txt", "w", stdout);
+    freopen("TestsOutput/PpUnitTest.txt", "w", stdout);
 
     process* input = getProcessesForTest();
 
