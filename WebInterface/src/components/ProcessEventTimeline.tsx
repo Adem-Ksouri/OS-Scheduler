@@ -1,13 +1,16 @@
 import { motion } from 'motion/react';
-import { Process } from '../App';
+import { Process } from '../utils/types';
 import { Activity } from 'lucide-react';
 import { useState } from 'react';
+import { GANTT_CONSTANTS } from '../utils/constants';
 
 interface ProcessEventTimelineProps {
   processes: Process[];
-  processColors: Map<string, string>;
+  processColors: Map<number, string>;
   currentTime: number;
 }
+
+const { PX_PER_UNIT } = GANTT_CONSTANTS;
 
 export function ProcessEventTimeline({
   processes,
@@ -15,7 +18,7 @@ export function ProcessEventTimeline({
   currentTime,
 }: ProcessEventTimelineProps) {
   const [hoveredEvent, setHoveredEvent] = useState<{
-    processId: string;
+    pid: number;
     eventIndex: number;
   } | null>(null);
 
@@ -24,22 +27,22 @@ export function ProcessEventTimeline({
       <div className="flex items-center gap-3 mb-6">
         <Activity className="w-6 h-6 text-purple-600" />
         <div>
-          <h2 className="text-slate-800">CPU Internal Events</h2>
-          <p className="text-slate-600">Hover over markers to view operations</p>
+          <h2 className="text-lg font-semibold text-slate-800">CPU Internal Events</h2>
+          <p className="text-sm text-slate-600">Hover over markers to view operations</p>
         </div>
       </div>
 
       <div className="space-y-6">
         {processes.map((process) => {
-          const color = processColors.get(process.id) || '#3b82f6';
-          const timelineWidth = process.burstTime * 40; // 40px per time unit
+          const color = processColors.get(process.pid) || '#3b82f6';
+          const timelineWidth = process.exec_time * PX_PER_UNIT;
 
           return (
             <motion.div
-              key={process.id}
+              key={process.pid}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-r from-slate-50 to-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-gradient-to-r from-slate-50 to-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-x-hidden"
             >
               {/* Process Header */}
               <div className="flex items-center gap-3 mb-4">
@@ -48,9 +51,9 @@ export function ProcessEventTimeline({
                   style={{ backgroundColor: color }}
                 />
                 <div>
-                  <div className="text-slate-800">{process.id}</div>
+                  <div className="text-sm font-semibold text-slate-800">{process.name}</div>
                   <div className="text-xs text-slate-500">
-                    {process.events.length} operation{process.events.length !== 1 ? 's' : ''} • Burst: {process.burstTime} units
+                    {process.nbEvents} operation{process.nbEvents !== 1 ? 's' : ''} • Exec: {process.exec_time} units
                   </div>
                 </div>
               </div>
@@ -63,13 +66,13 @@ export function ProcessEventTimeline({
                 >
                   {/* Timeline track */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 opacity-60 rounded-lg" />
-                  
+
                   {/* Time markers */}
-                  {Array.from({ length: process.burstTime + 1 }).map((_, i) => (
+                  {Array.from({ length: process.exec_time + 1 }).map((_, i) => (
                     <div
                       key={i}
                       className="absolute top-0 bottom-0 border-l border-slate-300"
-                      style={{ left: `${i * 40}px` }}
+                      style={{ left: `${i * PX_PER_UNIT}px` }}
                     >
                       <span className="absolute -bottom-5 -left-2 text-xs text-slate-500">
                         {i}
@@ -79,11 +82,11 @@ export function ProcessEventTimeline({
 
                   {/* Event markers */}
                   {process.events.map((event, index) => {
-                    const position = event.time * 40;
+                    const position = event.t * PX_PER_UNIT;
                     const isHovered =
-                      hoveredEvent?.processId === process.id &&
+                      hoveredEvent?.pid === process.pid &&
                       hoveredEvent?.eventIndex === index;
-                    const isActive = currentTime >= event.time && currentTime < event.time + 0.5;
+                    const isActive = currentTime >= event.t && currentTime < event.t + 0.5;
 
                     return (
                       <div key={index}>
@@ -104,7 +107,7 @@ export function ProcessEventTimeline({
                             zIndex: isHovered || isActive ? 20 : 10,
                           }}
                           onMouseEnter={() =>
-                            setHoveredEvent({ processId: process.id, eventIndex: index })
+                            setHoveredEvent({ pid: process.pid, eventIndex: index })
                           }
                           onMouseLeave={() => setHoveredEvent(null)}
                         />
@@ -127,7 +130,7 @@ export function ProcessEventTimeline({
                             zIndex: isHovered || isActive ? 20 : 10,
                           }}
                           onMouseEnter={() =>
-                            setHoveredEvent({ processId: process.id, eventIndex: index })
+                            setHoveredEvent({ pid: process.pid, eventIndex: index })
                           }
                           onMouseLeave={() => setHoveredEvent(null)}
                         />
@@ -145,10 +148,10 @@ export function ProcessEventTimeline({
                           >
                             <div className="flex items-center gap-2">
                               <span className="text-yellow-300">⚡</span>
-                              <span>{event.operation}</span>
+                              <span>{event.comment}</span>
                             </div>
                             <div className="text-[10px] text-slate-400 mt-1">
-                              Time: {event.time}
+                              Time: {event.t}
                             </div>
                             {/* Tooltip arrow */}
                             <div
@@ -166,13 +169,13 @@ export function ProcessEventTimeline({
                   })}
 
                   {/* Current time indicator (for animation) */}
-                  {currentTime >= 0 && currentTime <= process.burstTime && (
+                  {currentTime >= 0 && currentTime <= process.exec_time && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className="absolute top-0 bottom-0 w-0.5 bg-red-500 shadow-lg z-30 pointer-events-none"
                       style={{
-                        left: `${currentTime * 40}px`,
+                        left: `${currentTime * PX_PER_UNIT}px`,
                       }}
                     >
                       <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-red-500 rounded-full" />
@@ -182,7 +185,7 @@ export function ProcessEventTimeline({
 
                 {/* Scale label */}
                 <div className="text-xs text-slate-400 mt-6 text-center">
-                  Timeline scale: 1 unit = 40px
+                  Timeline scale: 1 unit = {PX_PER_UNIT}px
                 </div>
               </div>
             </motion.div>

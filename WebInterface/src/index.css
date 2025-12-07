@@ -176,8 +176,9 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  body {
+   body {
     line-height: inherit;
+  
   }
 
   hr {

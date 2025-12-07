@@ -5,6 +5,7 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
+      "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
       "cwd": "c:/Users/LENOVO/Documents/GitHub/OS-Scheduler/UnitTests/QueueTests",

@@ -1,76 +1,56 @@
 import { motion } from 'motion/react';
-import { Process } from '../App';
-import { GanttBlock } from './SimulatorInterface';
+import { Process, GanttBlock, Execute } from '../utils/types';
 import { Clock } from 'lucide-react';
 import { useState } from 'react';
+import { GANTT_CONSTANTS } from '../utils/constants';
 
 interface GanttChartProps {
   ganttBlocks: GanttBlock[];
   currentTime: number;
-  processColors: Map<string, string>;
+  processColors: Map<number, string>;
   processes: Process[];
+  executes: Execute[];
 }
 
-// DETERMINISTIC PIXEL CALCULATIONS
-const PX_PER_UNIT = 40; // Fixed: 40px per time unit
-const LEFT_PADDING = 140; // Space for process labels
-const RIGHT_PADDING = 60;
-const ROW_HEIGHT = 72; // Fixed row height
-const RULER_HEIGHT = 50;
-const MIN_SEGMENT_WIDTH = 24; // Minimum visual width for readability
+const {
+  PX_PER_UNIT,
+  LEFT_PADDING,
+  RIGHT_PADDING,
+  ROW_HEIGHT,
+  RULER_HEIGHT,
+  MIN_SEGMENT_WIDTH,
+} = GANTT_CONSTANTS;
 
-const EVENT_STYLES = {
-  Compute: {
-    opacity: 'opacity-100',
-    border: 'border-2 border-solid',
-    pattern: null,
-  },
-  ContextSwitch: {
-    opacity: 'opacity-70',
-    border: 'border-2 border-dashed',
-    pattern: 'diagonal-stripes',
-  },
-  Preemption: {
-    opacity: 'opacity-85',
-    border: 'border-2 border-dotted',
-    pattern: 'horizontal-lines',
-  },
-  Idle: {
-    opacity: 'opacity-40',
-    border: 'border-2 border-dashed',
-    pattern: 'dots',
-  },
-};
+export function GanttChart({
+  ganttBlocks,
+  currentTime,
+  processColors,
+  processes,
+  executes,
+}: GanttChartProps) {
+  const maxTimeFromBlocks =
+    ganttBlocks.length > 0 ? Math.max(...ganttBlocks.map((b) => b.endTime)) : 0;
+  const totalExecTime = processes.reduce((sum, p) => sum + p.exec_time, 0);
+  const maxTime = Math.max(maxTimeFromBlocks + 5, totalExecTime + 10, 30);
 
-export function GanttChart({ ganttBlocks, currentTime, processColors, processes }: GanttChartProps) {
-  // Calculate maxTime from gantt blocks or default
-  const maxTimeFromBlocks = ganttBlocks.length > 0 
-    ? Math.max(...ganttBlocks.map(b => b.endTime))
-    : 0;
-  const totalBurstTime = processes.reduce((sum, p) => sum + p.burstTime, 0);
-  const maxTime = Math.max(maxTimeFromBlocks + 5, totalBurstTime + 10, 30);
-
-  // Total content width for horizontal scrolling
-  const contentWidth = LEFT_PADDING + (maxTime * PX_PER_UNIT) + RIGHT_PADDING;
-
-  // Generate time ticks
+  const contentWidth = LEFT_PADDING + maxTime * PX_PER_UNIT + RIGHT_PADDING;
   const timeTicks = Array.from({ length: maxTime + 1 }, (_, i) => i);
 
-  // Group blocks by process to combine consecutive segments
-  const processBlockGroups = processes.map(process => {
-    const blocks = ganttBlocks.filter(b => b.processId === process.id);
-    
-    // Merge consecutive blocks of the same event type
+  // Group blocks by process
+  const processBlockGroups = processes.map((process) => {
+    const blocks = ganttBlocks.filter((b) => b.pid === process.pid);
+
+    // Merge consecutive blocks
     const merged: GanttBlock[] = [];
-    blocks.forEach(block => {
+    blocks.forEach((block) => {
       const last = merged[merged.length - 1];
-      if (last && last.eventType === block.eventType && last.endTime === block.startTime) {
+      if (last && last.endTime === block.startTime) {
         last.endTime = block.endTime;
       } else {
         merged.push({ ...block });
       }
     });
-    
+
     return { process, blocks: merged };
   });
 
@@ -79,39 +59,42 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
       <div className="flex items-center gap-3 mb-4">
         <Clock className="w-6 h-6 text-blue-600" />
         <div>
-          <h2 className="text-slate-800">Real-Time Gantt Chart Timeline</h2>
-          <p className="text-slate-600">Animated execution timeline with CPU operations shown as yellow markers ({PX_PER_UNIT}px per unit)</p>
+          <h2 className="text-lg font-semibold text-slate-800">Real-Time Gantt Chart Timeline</h2>
+          <p className="text-sm text-slate-600">
+            Animated execution timeline with CPU operations shown as yellow markers
+          </p>
         </div>
       </div>
 
-      {/* Scrollable timeline container */}
-      <div 
-        className="overflow-x-auto overflow-y-auto bg-slate-50 rounded-xl border border-slate-200"
-        style={{ maxHeight: '600px' }}
+          <div
+        className="overflow-x-auto overflow-y-visible bg-slate-50 rounded-xl border border-slate-200"
+        style={{ maxHeight: '1000px' }}
       >
         {ganttBlocks.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
             <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>Click Play to start the simulation</p>
-            <p>Events will appear at their exact execution times</p>
+            <p className="text-sm">Events will appear at their exact execution times</p>
           </div>
         ) : (
-          <div 
+          <div
             className="relative bg-slate-50"
-            style={{ 
+            style={{
               width: `${contentWidth}px`,
-              minHeight: `${RULER_HEIGHT + (processes.length * ROW_HEIGHT) + 40}px`
+              minHeight: `${RULER_HEIGHT + processes.length * ROW_HEIGHT + 40}px`,
             }}
           >
             {/* TIME RULER */}
-            <div 
+            <div
               className="sticky top-0 z-20 bg-slate-50 border-b-2 border-slate-300"
               style={{ height: `${RULER_HEIGHT}px` }}
             >
               <div className="relative h-full">
-                {/* Ruler ticks and labels */}
                 <div className="absolute inset-0 flex items-end pb-2">
-                  <div style={{ width: `${LEFT_PADDING}px` }} className="flex-shrink-0" />
+                  <div
+                    style={{ width: `${LEFT_PADDING}px` }}
+                    className="flex-shrink-0"
+                  />
                   {timeTicks.map((time) => {
                     const xPos = time * PX_PER_UNIT;
                     return (
@@ -120,10 +103,10 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
                         className="absolute flex flex-col items-center"
                         style={{ left: `${LEFT_PADDING + xPos}px` }}
                       >
-                        {/* Tick mark */}
                         <div className="w-0.5 h-3 bg-slate-400 mb-1" />
-                        {/* Time label */}
-                        <span className="text-xs text-slate-600 font-mono">{time}</span>
+                        <span className="text-xs text-slate-600 font-mono">
+                          {time}
+                        </span>
                       </div>
                     );
                   })}
@@ -134,7 +117,7 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
             {/* VERTICAL GRID LINES */}
             <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none z-0">
               {timeTicks.map((time) => {
-                const xPos = LEFT_PADDING + (time * PX_PER_UNIT);
+                const xPos = LEFT_PADDING + time * PX_PER_UNIT;
                 return (
                   <div
                     key={`grid-${time}`}
@@ -148,20 +131,20 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
             {/* PROCESS ROWS */}
             <div className="relative z-10">
               {processBlockGroups.map(({ process, blocks }, rowIndex) => {
-                const color = processColors.get(process.id) || '#3b82f6';
-                const rowTop = RULER_HEIGHT + (rowIndex * ROW_HEIGHT);
+                const color = processColors.get(process.pid) || '#3b82f6';
+                const rowTop = RULER_HEIGHT + rowIndex * ROW_HEIGHT;
 
                 return (
                   <div
-                    key={process.id}
+                    key={process.pid}
                     className="absolute left-0 right-0 border-b border-slate-200"
-                    style={{ 
+                    style={{
                       top: `${rowTop}px`,
-                      height: `${ROW_HEIGHT}px`
+                      height: `${ROW_HEIGHT}px`,
                     }}
                   >
                     {/* Process Label */}
-                    <div 
+                    <div
                       className="absolute left-0 top-0 bottom-0 flex items-center px-4 bg-slate-50 border-r border-slate-200 z-10"
                       style={{ width: `${LEFT_PADDING}px` }}
                     >
@@ -171,59 +154,42 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
                           style={{ backgroundColor: color }}
                         />
                         <div>
-                          <div className="text-slate-800">{process.id}</div>
-                          <div className="text-xs text-slate-500">B: {process.burstTime}</div>
+                          <div className="text-sm font-medium text-slate-800">{process.name}</div>
+                          <div className="text-xs text-slate-500">
+                            Exec: {process.exec_time}
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Event segments for this process */}
                     {blocks.map((block, blockIndex) => {
-                      // DETERMINISTIC POSITIONING
-                      const startX = LEFT_PADDING + (block.startTime * PX_PER_UNIT);
+                      const startX = LEFT_PADDING + block.startTime * PX_PER_UNIT;
                       const duration = block.endTime - block.startTime;
-                      const segmentWidth = Math.max(duration * PX_PER_UNIT - 4, MIN_SEGMENT_WIDTH);
-                      
-                      const isRunning = block.endTime >= currentTime - 1 && block.startTime < currentTime;
-                      const eventStyle = EVENT_STYLES[block.eventType as keyof typeof EVENT_STYLES] || EVENT_STYLES.Compute;
-
-                      // Find CPU internal events that occur within this execution block
-                      const cpuEventMarkers: Array<{ absoluteTime: number; operation: string }> = [];
-                      
-                      // Calculate the execution progress at the start of this block
-                      let executionTimeBeforeBlock = 0;
-                      const allBlocksBeforeThis = ganttBlocks.filter(
-                        b => b.processId === block.processId && b.endTime <= block.startTime
+                      const segmentWidth = Math.max(
+                        duration * PX_PER_UNIT - 4,
+                        MIN_SEGMENT_WIDTH
                       );
-                      allBlocksBeforeThis.forEach(b => {
-                        executionTimeBeforeBlock += (b.endTime - b.startTime);
-                      });
-                      
-                      // Check which CPU events fall within this block's execution window
-                      process.events.forEach(evt => {
-                        // evt.time is relative to process execution (0 to burstTime)
-                        const eventExecutionTime = evt.time; // Time in execution progress
-                        const blockExecutionStart = executionTimeBeforeBlock;
-                        const blockExecutionEnd = executionTimeBeforeBlock + duration;
-                        
-                        // Check if this event falls within this block's execution window
-                        if (eventExecutionTime >= blockExecutionStart && eventExecutionTime < blockExecutionEnd) {
-                          // Calculate absolute time position
-                          const relativeExecutionTime = eventExecutionTime - blockExecutionStart;
-                          const absoluteTime = block.startTime + relativeExecutionTime;
-                          cpuEventMarkers.push({ absoluteTime, operation: evt.operation });
-                        }
-                      });
+
+                      const isRunning =
+                        block.endTime >= currentTime - 1 &&
+                        block.startTime < currentTime;
+
+                      // Calculate CPU event markers
+                      const cpuEventMarkers = calculateEventMarkers(
+                        process,
+                        block,
+                        executes
+                      );
 
                       return (
                         <EventSegment
-                          key={`${block.processId}-${blockIndex}`}
+                          key={`${block.pid}-${blockIndex}`}
                           block={block}
                           startX={startX}
                           width={segmentWidth}
                           color={color}
                           isRunning={isRunning}
-                          eventStyle={eventStyle}
                           duration={duration}
                           cpuEventMarkers={cpuEventMarkers}
                         />
@@ -234,33 +200,27 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
               })}
             </div>
 
-            {/* CURRENT TIME MARKER - Animated moving line */}
+            {/* CURRENT TIME MARKER */}
             {currentTime > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ 
+                animate={{
                   opacity: 1,
-                  left: `${LEFT_PADDING + (currentTime * PX_PER_UNIT)}px`
+                  left: `${LEFT_PADDING + currentTime * PX_PER_UNIT}px`,
                 }}
-                transition={{ 
+                transition={{
                   left: { duration: 0.5, ease: 'linear' },
-                  opacity: { duration: 0.3 }
+                  opacity: { duration: 0.3 },
                 }}
                 className="absolute top-0 w-0.5 bg-red-500 z-30 pointer-events-none shadow-lg"
                 style={{
-                  height: `${RULER_HEIGHT + (processes.length * ROW_HEIGHT)}px`,
+                  height: `${RULER_HEIGHT + processes.length * ROW_HEIGHT}px`,
                 }}
               >
-                {/* Top label */}
                 <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 -translate-y-full bg-red-500 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-lg font-mono">
                   t = {currentTime}
                 </div>
-                {/* Glow effect */}
                 <div className="absolute inset-0 bg-red-500 blur-sm opacity-50" />
-                {/* Bottom arrow */}
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-red-500"></div>
-                </div>
               </motion.div>
             )}
           </div>
@@ -270,28 +230,26 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
       {/* LEGENDS */}
       {ganttBlocks.length > 0 && (
         <div className="mt-4 grid md:grid-cols-2 gap-4">
-          {/* Process Colors */}
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <h3 className="text-slate-700 mb-3">Process Colors</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Process Colors</h3>
             <div className="flex flex-wrap gap-3">
               {processes.map((process) => {
-                const color = processColors.get(process.id) || '#3b82f6';
+                const color = processColors.get(process.pid) || '#3b82f6';
                 return (
-                  <div key={process.id} className="flex items-center gap-2">
+                  <div key={process.pid} className="flex items-center gap-2">
                     <div
                       className="w-4 h-4 rounded"
                       style={{ backgroundColor: color }}
                     />
-                    <span className="text-slate-600 text-sm">{process.id}</span>
+                    <span className="text-slate-600 text-sm">{process.name}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* CPU Operations Legend */}
           <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-            <h3 className="text-slate-700 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
               <span className="text-yellow-600">⚡</span>
               CPU Operations
             </h3>
@@ -311,24 +269,94 @@ export function GanttChart({ ganttBlocks, currentTime, processColors, processes 
   );
 }
 
-// EVENT SEGMENT COMPONENT
+// Helper function to calculate event markers
+function calculateEventMarkers(
+  process: Process,
+  block: GanttBlock,
+  executes: Execute[]
+): Array<{ absoluteTime: number; comment: string }> {
+  const markers: Array<{ absoluteTime: number; comment: string }> = [];
+
+  // Find all executes for this process up to this block
+  const processExecutes = executes.filter(e => e.p.pid === process.pid && e.ts <= block.startTime);
+  
+  let executionTimeBeforeBlock = 0;
+  processExecutes.forEach(e => {
+    if (e.te <= block.startTime) {
+      executionTimeBeforeBlock += (e.te - e.ts);
+    }
+  });
+
+  const duration = block.endTime - block.startTime;
+  const blockExecutionStart = executionTimeBeforeBlock;
+  const blockExecutionEnd = executionTimeBeforeBlock + duration;
+
+  process.events.forEach(evt => {
+    if (evt.t >= blockExecutionStart && evt.t < blockExecutionEnd) {
+      const relativeExecutionTime = evt.t - blockExecutionStart;
+      const absoluteTime = block.startTime + relativeExecutionTime;
+      markers.push({
+        absoluteTime,
+        comment: evt.comment,
+      });
+    }
+  });
+
+  return markers;
+}
+
+// EventSegment component
 interface EventSegmentProps {
   block: GanttBlock;
   startX: number;
   width: number;
   color: string;
   isRunning: boolean;
-  eventStyle: { opacity: string; border: string; pattern: string | null };
   duration: number;
-  cpuEventMarkers: Array<{ absoluteTime: number; operation: string }>;
+  cpuEventMarkers: Array<{ absoluteTime: number; comment: string }>;
 }
 
-function EventSegment({ block, startX, width, color, isRunning, eventStyle, duration, cpuEventMarkers }: EventSegmentProps) {
+function EventSegment({
+  block,
+  startX,
+  width,
+  color,
+  isRunning,
+  duration,
+  cpuEventMarkers,
+}: EventSegmentProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
 
   return (
     <>
+      {/* Move tooltip outside and above the motion.div */}
+      {showTooltip && hoveredMarker === null && (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-2xl border border-slate-700 z-[100] whitespace-nowrap pointer-events-none"
+          style={{
+            left: `${startX + width / 2}px`,
+            top: '-60px',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          <div className="space-y-1">
+            <div>
+              <strong>Process:</strong> {block.name}
+            </div>
+            <div>
+              <strong>Start:</strong> t={block.startTime} | <strong>End:</strong> t={block.endTime}
+            </div>
+            <div>
+              <strong>Duration:</strong> {duration} units
+            </div>
+          </div>
+          <div className="absolute w-2 h-2 bg-slate-900 transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1 border-b border-r border-slate-700" />
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{
@@ -345,7 +373,7 @@ function EventSegment({ block, startX, width, color, isRunning, eventStyle, dura
         }}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className={`absolute rounded-lg overflow-visible group cursor-pointer ${eventStyle.opacity} ${eventStyle.border} ${
+        className={`absolute rounded-lg overflow-visible group cursor-pointer opacity-90 border-2 ${
           isRunning ? 'ring-4 ring-yellow-400 shadow-xl z-20' : 'shadow-md z-10'
         }`}
         style={{
@@ -357,17 +385,13 @@ function EventSegment({ block, startX, width, color, isRunning, eventStyle, dura
           borderColor: isRunning ? '#fbbf24' : color,
         }}
       >
-        {/* Event content */}
         <div className="h-full flex flex-col items-center justify-center text-white px-2 relative z-10">
-          <div className="text-xs truncate w-full text-center font-medium">
-            {block.eventType}
+          <div className="text-xs font-medium truncate w-full text-center">
+            Execution
           </div>
-          <div className="text-xs opacity-90 mt-0.5 font-mono">
-            {duration}u
-          </div>
+          <div className="text-xs opacity-90 mt-0.5 font-mono">{duration}u</div>
         </div>
 
-        {/* CPU Event markers - show as vertical lines with circles */}
         {cpuEventMarkers.map((marker, idx) => {
           const markerX = (marker.absoluteTime - block.startTime) * PX_PER_UNIT;
           const isHovered = hoveredMarker === idx;
@@ -377,7 +401,6 @@ function EventSegment({ block, startX, width, color, isRunning, eventStyle, dura
               className="relative"
               style={{ pointerEvents: 'auto' }}
             >
-              {/* Vertical line */}
               <motion.div
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: 1 }}
@@ -385,8 +408,7 @@ function EventSegment({ block, startX, width, color, isRunning, eventStyle, dura
                 className="absolute top-0 bottom-0 w-0.5 bg-yellow-300 opacity-80 z-20 origin-top pointer-events-none"
                 style={{ left: `${markerX}px` }}
               />
-              
-              {/* Interactive circle marker */}
+
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: isHovered ? 1.5 : 1 }}
@@ -401,9 +423,8 @@ function EventSegment({ block, startX, width, color, isRunning, eventStyle, dura
                   e.stopPropagation();
                   setHoveredMarker(null);
                 }}
-                title={marker.operation}
+                title={marker.comment}
               >
-                {/* Pulse animation */}
                 {isHovered && (
                   <motion.div
                     initial={{ scale: 1, opacity: 0.5 }}
@@ -416,60 +437,14 @@ function EventSegment({ block, startX, width, color, isRunning, eventStyle, dura
             </div>
           );
         })}
-
-        {/* Visual pattern overlays */}
-        {eventStyle.pattern === 'diagonal-stripes' && (
-          <div 
-            className="absolute inset-0 opacity-30 pointer-events-none"
-            style={{
-              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.5) 4px, rgba(255,255,255,0.5) 8px)'
-            }}
-          />
-        )}
-        {eventStyle.pattern === 'horizontal-lines' && (
-          <div 
-            className="absolute inset-0 opacity-30 pointer-events-none"
-            style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.5) 3px, rgba(255,255,255,0.5) 6px)'
-            }}
-          />
-        )}
-        {eventStyle.pattern === 'dots' && (
-          <div 
-            className="absolute inset-0 opacity-40 pointer-events-none"
-            style={{
-              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)',
-              backgroundSize: '8px 8px'
-            }}
-          />
-        )}
-
-        {/* Block hover tooltip */}
-        {showTooltip && hoveredMarker === null && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="absolute bg-slate-900 text-white text-xs rounded-lg px-3 py-2 -top-24 left-1/2 transform -translate-x-1/2 z-50 whitespace-nowrap shadow-2xl border border-slate-700 pointer-events-none"
-          >
-            <div className="space-y-1">
-              <div><strong>Process:</strong> {block.processId}</div>
-              <div><strong>Event:</strong> {block.eventType}</div>
-              <div><strong>Start:</strong> t={block.startTime} | <strong>End:</strong> t={block.endTime}</div>
-              <div><strong>Duration:</strong> {duration} units</div>
-            </div>
-            <div className="absolute w-2 h-2 bg-slate-900 transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1 border-b border-r border-slate-700"></div>
-          </motion.div>
-        )}
       </motion.div>
 
-      {/* CPU Event tooltips - rendered outside the block to avoid z-index issues */}
       {cpuEventMarkers.map((marker, idx) => {
         const markerX = (marker.absoluteTime - block.startTime) * PX_PER_UNIT;
         const isHovered = hoveredMarker === idx;
-        
+
         if (!isHovered) return null;
-        
+
         return (
           <motion.div
             key={`tooltip-${idx}`}
@@ -487,10 +462,11 @@ function EventSegment({ block, startX, width, color, isRunning, eventStyle, dura
               <strong>CPU Operation</strong>
             </div>
             <div className="text-[11px] space-y-1">
-              <div>{marker.operation}</div>
-              <div className="text-yellow-200">Time: {marker.absoluteTime.toFixed(1)}</div>
+              <div>{marker.comment}</div>
+              <div className="text-yellow-200">
+                Time: {marker.absoluteTime.toFixed(1)}
+              </div>
             </div>
-            {/* Tooltip arrow */}
             <div
               className="absolute w-2 h-2 bg-yellow-600 transform rotate-45 border-b border-r border-yellow-500"
               style={{

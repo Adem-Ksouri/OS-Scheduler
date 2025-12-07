@@ -1,57 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Process, SchedulingAlgorithm } from '../App';
+import { motion } from 'motion/react';
+import { Process, Execute, GanttBlock, ProcessState } from '../utils/types';
 import { SimulationControls } from './SimulationControls';
 import { GanttChart } from './GanttChart';
 import { ProcessMetrics } from './ProcessMetrics';
-import { runScheduler, SchedulerResult } from '../utils/scheduler';
+import { runScheduler } from '../utils/scheduler';
+import { PROCESS_COLORS } from '../utils/constants';
+import { initializeProcessStates } from '../utils/processHelpers';
+import { fetchAlgorithms } from '../utils/api';
 
 interface SimulatorInterfaceProps {
   processes: Process[];
-  algorithm: SchedulingAlgorithm;
+  algorithmId: string;
   quantum: number;
   onReset: () => void;
 }
 
-export interface GanttBlock {
-  processId: string;
-  startTime: number;
-  endTime: number;
-  eventType: string;
-  color: string;
-}
-
-export interface ProcessState {
-  id: string;
-  state: 'Ready' | 'Running' | 'Waiting' | 'Finished';
-  remainingTime: number;
-  waitingTime: number;
-  turnaroundTime: number;
-  responseTime: number;
-  lastExecutionTime: number;
-  firstResponseTime: number | null;
-  arrivalTime: number;
-  burstTime: number;
-  priority?: number;
-  currentEventIndex: number;
-  currentEventProgress: number;
-  events: Array<{ time: number; operation: string }>;
-}
-
-const PROCESS_COLORS = [
-  '#3b82f6', // blue
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#f59e0b', // amber
-  '#10b981', // green
-  '#06b6d4', // cyan
-  '#f97316', // orange
-  '#6366f1', // indigo
-];
-
 export function SimulatorInterface({
   processes,
-  algorithm,
+  algorithmId,
   quantum,
   onReset,
 }: SimulatorInterfaceProps) {
@@ -61,65 +28,89 @@ export function SimulatorInterface({
   const [speed, setSpeed] = useState(1);
   const [ganttBlocks, setGanttBlocks] = useState<GanttBlock[]>([]);
   const [processStates, setProcessStates] = useState<ProcessState[]>([]);
-  const [currentAlgorithm, setCurrentAlgorithm] = useState(algorithm);
+  const [currentAlgorithmId, setCurrentAlgorithmId] = useState(algorithmId);
   const [currentQuantum, setCurrentQuantum] = useState(quantum);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [algorithmName, setAlgorithmName] = useState<string>('');
   
-  const [schedulerResult, setSchedulerResult] = useState<SchedulerResult | null>(null);
+  const [executes, setExecutes] = useState<Execute[]>([]);
+  const [totalTime, setTotalTime] = useState(0);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const processColorsRef = useRef<Map<string, string>>(new Map());
+  const processColorsRef = useRef<Map<number, string>>(new Map());
 
   // Initialize process colors
   useEffect(() => {
     processes.forEach((p, index) => {
-      if (!processColorsRef.current.has(p.id)) {
-        processColorsRef.current.set(p.id, PROCESS_COLORS[index % PROCESS_COLORS.length]);
+      if (!processColorsRef.current.has(p.pid)) {
+        processColorsRef.current.set(p.pid, PROCESS_COLORS[index % PROCESS_COLORS.length]);
       }
     });
   }, [processes]);
 
+  // Fetch algorithm name
+  useEffect(() => {
+    const loadAlgorithmName = async () => {
+      const algorithms = await fetchAlgorithms();
+      const algo = algorithms.find(a => a.id === currentAlgorithmId);
+      setAlgorithmName(algo?.name || currentAlgorithmId);
+    };
+    loadAlgorithmName();
+  }, [currentAlgorithmId]);
+
   // Run scheduler when algorithm or quantum changes
   useEffect(() => {
-    const result = runScheduler(processes, currentAlgorithm, currentQuantum);
-    setSchedulerResult(result);
+    let cancelled = false;
     
-    // Initialize process states from scheduler result
-    setProcessStates(
-      result.finalStates.map((s) => ({
-        id: s.id,
-        state: 'Ready',
-        remainingTime: s.burstTime,
-        waitingTime: 0,
-        turnaroundTime: 0,
-        responseTime: 0,
-        lastExecutionTime: -1,
-        firstResponseTime: null,
-        arrivalTime: s.arrivalTime,
-        burstTime: s.burstTime,
-        priority: s.priority,
-        currentEventIndex: 0,
-        currentEventProgress: 0,
-        events: s.events.map(e => ({ time: e.time, operation: e.operation })),
-      }))
-    );
+    const runAsync = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const result = await runScheduler(processes, currentAlgorithmId, currentQuantum);
+        
+        if (!cancelled) {
+          setExecutes(result);
+          const maxTime = result.length > 0 ? Math.max(...result.map(e => e.te)) : 0;
+          setTotalTime(maxTime);
+          
+          // Initialize process states
+          setProcessStates(initializeProcessStates(processes));
 
-    // Reset simulation
-    setCurrentTime(0);
-    setGanttBlocks([]);
-    setIsRunning(false);
-    setIsPaused(false);
-  }, [processes, currentAlgorithm, currentQuantum]);
+          // Reset simulation
+          setCurrentTime(0);
+          setGanttBlocks([]);
+          setIsRunning(false);
+          setIsPaused(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError('Failed to compute schedule. Please try again.');
+          console.error('Scheduler error:', err);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    runAsync();
+    return () => {
+      cancelled = true;
+    };
+  }, [processes, currentAlgorithmId, currentQuantum]);
 
-  // Animation loop - advance time
+  // Animation loop
   useEffect(() => {
-    if (isRunning && !isPaused && schedulerResult) {
+    if (isRunning && !isPaused) {
       intervalRef.current = setInterval(() => {
         setCurrentTime((prev) => {
           const next = prev + 1;
-          // Stop when we reach the end
-          if (next > schedulerResult.totalTime) {
+          if (next > totalTime) {
             setIsRunning(false);
-            return schedulerResult.totalTime;
+            return totalTime;
           }
           return next;
         });
@@ -136,75 +127,71 @@ export function SimulatorInterface({
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, isPaused, speed, schedulerResult]);
+  }, [isRunning, isPaused, speed, totalTime]);
 
   // Update gantt blocks and process states based on current time
   useEffect(() => {
-    if (!schedulerResult) return;
+    if (executes.length === 0) return;
 
-    // Filter timeline events up to current time
-    const visibleEvents = schedulerResult.timeline.filter(
-      e => e.startTime < currentTime
-    );
+    const visibleExecutes = executes.filter(e => e.ts < currentTime);
 
-    // Convert to gantt blocks
-    const blocks: GanttBlock[] = visibleEvents.map(e => ({
-      processId: e.processId,
-      startTime: e.startTime,
-      endTime: Math.min(e.endTime, currentTime),
-      eventType: e.eventType,
-      color: processColorsRef.current.get(e.processId) || '#3b82f6',
+    const blocks: GanttBlock[] = visibleExecutes.map(e => ({
+      pid: e.p.pid,
+      name: e.p.name,
+      startTime: e.ts,
+      endTime: Math.min(e.te, currentTime),
+      color: processColorsRef.current.get(e.p.pid) || '#3b82f6',
     }));
 
     setGanttBlocks(blocks);
 
-    // Update process states based on current time
+    // Update process states
     setProcessStates(prev => prev.map(state => {
-      const eventsForProcess = schedulerResult.timeline.filter(
-        e => e.processId === state.id && e.startTime < currentTime
+      const processExecutes = executes.filter(
+        e => e.p.pid === state.pid && e.ts < currentTime
       );
 
-      if (eventsForProcess.length === 0) {
+      if (processExecutes.length === 0) {
         return {
           ...state,
-          state: state.arrivalTime <= currentTime ? 'Ready' : 'Waiting',
+          state: state.arrival <= currentTime ? 'Ready' : 'Not Arrived',
         };
       }
 
-      // Calculate metrics up to current time
-      const lastEvent = eventsForProcess[eventsForProcess.length - 1];
-      const executionTime = eventsForProcess.reduce((sum, e) => {
-        const duration = Math.min(e.endTime, currentTime) - e.startTime;
+      const lastExecute = processExecutes[processExecutes.length - 1];
+      const totalExecuted = processExecutes.reduce((sum, e) => {
+        const duration = Math.min(e.te, currentTime) - e.ts;
         return sum + duration;
       }, 0);
 
-      const remainingTime = Math.max(0, state.burstTime - executionTime);
-      const firstExecution = eventsForProcess[0]?.startTime;
-      const responseTime = firstExecution !== undefined ? firstExecution - state.arrivalTime : 0;
+      const remainingTime = Math.max(0, state.exec_time - totalExecuted);
+      const firstExecution = processExecutes[0]?.ts;
+      const responseTime = firstExecution !== undefined ? firstExecution - state.arrival : 0;
       
-      let processState: 'Ready' | 'Running' | 'Waiting' | 'Finished' = 'Ready';
+      let processState: 'Ready' | 'Running' | 'Not Arrived' | 'Finished' = 'Ready';
       if (remainingTime === 0) {
         processState = 'Finished';
-      } else if (lastEvent.endTime > currentTime - 1 && lastEvent.startTime < currentTime) {
+      } else if (lastExecute.te > currentTime - 1 && lastExecute.ts < currentTime) {
         processState = 'Running';
-      } else if (state.arrivalTime > currentTime) {
-        processState = 'Waiting';
+      } else if (state.arrival > currentTime) {
+        processState = 'Not Arrived';
       }
 
-      const waitingTime = currentTime - state.arrivalTime - executionTime;
-      const turnaroundTime = remainingTime === 0 ? currentTime - state.arrivalTime : 0;
+      const waitingTime = currentTime - state.arrival - totalExecuted;
+      const turnaroundTime = remainingTime === 0 ? currentTime - state.arrival : 0;
 
       return {
         ...state,
         state: processState,
-        remainingTime,
+        rem_time: remainingTime,
         waitingTime: Math.max(0, waitingTime),
         turnaroundTime,
         responseTime,
         firstResponseTime: firstExecution !== undefined ? firstExecution : null,
+        completionTime: remainingTime === 0 ? currentTime : 0,
       };
     }));
-  }, [currentTime, schedulerResult]);
+  }, [currentTime, executes]);
 
   const handlePlayPause = () => {
     if (!isRunning) {
@@ -216,7 +203,7 @@ export function SimulatorInterface({
   };
 
   const handleStep = () => {
-    setCurrentTime((prev) => prev + 1);
+    setCurrentTime((prev) => Math.min(prev + 1, totalTime));
   };
 
   const handleRestart = () => {
@@ -224,28 +211,12 @@ export function SimulatorInterface({
     setIsPaused(false);
     setCurrentTime(0);
     setGanttBlocks([]);
-    setProcessStates(
-      processes.map((p) => ({
-        id: p.id,
-        state: 'Ready',
-        remainingTime: p.burstTime,
-        waitingTime: 0,
-        turnaroundTime: 0,
-        responseTime: 0,
-        lastExecutionTime: -1,
-        firstResponseTime: null,
-        arrivalTime: p.arrivalTime,
-        burstTime: p.burstTime,
-        priority: p.priority,
-        currentEventIndex: 0,
-        currentEventProgress: 0,
-        events: p.events.map(e => ({ time: e.time, operation: e.operation })),
-      }))
-    );
+    setProcessStates(initializeProcessStates(processes));
   };
 
-  const totalBurstTime = processes.reduce((sum, p) => sum + p.burstTime, 0);
-  const cpuUtilization = currentTime > 0 ? ((ganttBlocks.length / currentTime) * 100).toFixed(1) : '0.0';
+  const cpuUtilization = currentTime > 0 
+    ? ((ganttBlocks.reduce((sum, b) => sum + (b.endTime - b.startTime), 0) / currentTime) * 100).toFixed(1)
+    : '0.0';
   const completedProcesses = processStates.filter((p) => p.state === 'Finished').length;
   const throughput = currentTime > 0 ? (completedProcesses / currentTime).toFixed(3) : '0.000';
 
@@ -273,15 +244,46 @@ export function SimulatorInterface({
         ).toFixed(2)
       : '0.00';
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600">Computing schedule...</p>
+          <p className="text-slate-400 text-sm mt-2">Trying server, will fallback to local if needed</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={onReset}
+            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl"
+          >
+            Back to Setup
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen p-4 lg:p-6"
+      className="min-h-screen p-4 lg:p-6 w-full"
     >
-      <div className="max-w-[1800px] mx-auto">
-        {/* Header */}
+      {/* Main container with max-width constraint */}
+      <div className="max-w-[2000px] mx-auto">
+        
+        {/* Header section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-slate-800">OS Process Scheduler Simulator</h1>
@@ -293,15 +295,18 @@ export function SimulatorInterface({
             </button>
           </div>
           <p className="text-slate-600">
-            Algorithm: <span className="text-slate-800">{currentAlgorithm}</span>
-            {currentAlgorithm === 'Round Robin' && ` (Quantum: ${currentQuantum})`}
+            Algorithm: <span className="text-slate-800">{algorithmName}</span>
+            {currentAlgorithmId === 'RR' && ` (Quantum: ${currentQuantum})`}
           </p>
         </div>
 
-        {/* Main Grid */}
+        {/* Main content grid - LEFT: Charts, RIGHT: Metrics */}
         <div className="grid lg:grid-cols-[1fr,400px] gap-6 mb-6">
-          {/* Left: Controls + Gantt Chart */}
-          <div className="space-y-6">
+          
+          {/* LEFT COLUMN - Charts with scroll containment */}
+          <div className="space-y-6 min-w-0 overflow-hidden">
+            
+            {/* Simulation Controls */}
             <SimulationControls
               isRunning={isRunning}
               isPaused={isPaused}
@@ -311,22 +316,23 @@ export function SimulatorInterface({
               onStep={handleStep}
               onRestart={handleRestart}
               onSpeedChange={setSpeed}
-              onAlgorithmChange={setCurrentAlgorithm}
-              currentAlgorithm={currentAlgorithm}
-             
+              onAlgorithmChange={setCurrentAlgorithmId}
+              currentAlgorithmId={currentAlgorithmId}
               quantum={currentQuantum}
               onQuantumChange={setCurrentQuantum}
             />
 
+            {/* Gantt Chart - with overflow containment */}
             <GanttChart
               ganttBlocks={ganttBlocks}
               currentTime={currentTime}
               processColors={processColorsRef.current}
               processes={processes}
+              executes={executes}
             />
           </div>
 
-          {/* Right: Metrics */}
+          {/* RIGHT COLUMN - Metrics sidebar */}
           <ProcessMetrics
             processStates={processStates}
             cpuUtilization={cpuUtilization}
@@ -336,8 +342,6 @@ export function SimulatorInterface({
             avgResponseTime={avgResponseTime}
           />
         </div>
-
-    
       </div>
     </motion.div>
   );

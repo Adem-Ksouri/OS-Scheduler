@@ -1,43 +1,21 @@
 import { useState } from 'react';
 import { SetupPanel } from './components/SetupPanel';
 import { SimulatorInterface } from './components/SimulatorInterface';
-
-export interface Process {
-  id: string;
-  arrivalTime: number;
-  burstTime: number;
-  priority?: number;
-  remainingTime: number;
-  events: CPUEvent[];
-}
-
-export interface CPUEvent {
-  time: number; 
-  operation: string; 
-}
-
-export type SchedulingAlgorithm = 'FCFS' | 'SJF' | 'Priority-Preemptive' | 'Priority-Non-Preemptive' | 'Round Robin';
-
-export interface SimulationState {
-  isRunning: boolean;
-  isPaused: boolean;
-  currentTime: number;
-  speed: number;
-}
+import { Process } from './utils/types';
 
 export default function App() {
   const [simulationStarted, setSimulationStarted] = useState(false);
   const [processes, setProcesses] = useState<Process[]>([]);
-  const [algorithm, setAlgorithm] = useState<SchedulingAlgorithm>('FCFS');
+  const [algorithmId, setAlgorithmId] = useState<string>('');
   const [quantum, setQuantum] = useState(4);
 
   const handleStartSimulation = (
     procs: Process[],
-    algo: SchedulingAlgorithm,
+    algoId: string,
     q: number
   ) => {
     setProcesses(procs);
-    setAlgorithm(algo);
+    setAlgorithmId(algoId);
     setQuantum(q);
     setSimulationStarted(true);
   };
@@ -45,6 +23,7 @@ export default function App() {
   const handleReset = () => {
     setSimulationStarted(false);
     setProcesses([]);
+    setAlgorithmId('');
   };
 
   return (
@@ -54,7 +33,7 @@ export default function App() {
       ) : (
         <SimulatorInterface
           processes={processes}
-          algorithm={algorithm}
+          algorithmId={algorithmId}
           quantum={quantum}
           onReset={handleReset}
         />

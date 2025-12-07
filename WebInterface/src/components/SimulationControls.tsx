@@ -1,5 +1,7 @@
-import { Play, Pause, SkipForward, RotateCcw, Gauge, BookOpen, Zap, Clock } from 'lucide-react';
-import { SchedulingAlgorithm } from '../App';
+import { useState, useEffect } from 'react';
+import { Play, Pause, SkipForward, RotateCcw, Gauge, Clock } from 'lucide-react';
+import { AlgorithmInfo } from '../utils/types';
+import { fetchAlgorithms } from '../utils/api';
 
 interface SimulationControlsProps {
   isRunning: boolean;
@@ -10,9 +12,8 @@ interface SimulationControlsProps {
   onStep: () => void;
   onRestart: () => void;
   onSpeedChange: (speed: number) => void;
-  onAlgorithmChange: (algorithm: SchedulingAlgorithm) => void;
-  currentAlgorithm: SchedulingAlgorithm;
- 
+  onAlgorithmChange: (algorithmId: string) => void;
+  currentAlgorithmId: string;
   quantum?: number;
   onQuantumChange?: (quantum: number) => void;
 }
@@ -27,13 +28,28 @@ export function SimulationControls({
   onRestart,
   onSpeedChange,
   onAlgorithmChange,
-  currentAlgorithm,
- 
+  currentAlgorithmId,
   quantum,
   onQuantumChange,
 }: SimulationControlsProps) {
+  const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAlgorithms = async () => {
+      setIsLoading(true);
+      const algos = await fetchAlgorithms();
+      setAlgorithms(algos);
+      setIsLoading(false);
+    };
+    loadAlgorithms();
+  }, []);
+
+  const selectedAlgo = algorithms.find(a => a.id === currentAlgorithmId);
+  const requiresQuantum = selectedAlgo?.requiresQuantum || false;
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center gap-4">
         {/* Playback Controls */}
         <div className="flex items-center gap-2">
@@ -78,15 +94,15 @@ export function SimulationControls({
 
         {/* Time Display */}
         <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
-          <div className="text-slate-600">Current Time</div>
-          <div className="text-slate-800">{currentTime} units</div>
+          <div className="text-xs text-slate-600">Current Time</div>
+          <div className="text-sm font-mono text-slate-800">{currentTime} units</div>
         </div>
 
         {/* Speed Control */}
         <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
           <Gauge className="w-5 h-5 text-slate-600" />
           <div className="flex flex-col">
-            <span className="text-slate-600">Speed</span>
+            <span className="text-xs text-slate-600">Speed</span>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -97,33 +113,36 @@ export function SimulationControls({
                 onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
                 className="w-24 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <span className="text-slate-700 min-w-[40px]">{speed}x</span>
+              <span className="text-sm text-slate-700 min-w-[40px]">{speed}x</span>
             </div>
           </div>
         </div>
 
         {/* Algorithm Switch */}
         <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-          <Zap className="w-5 h-5 text-indigo-600" />
-          <select
-            value={currentAlgorithm}
-            onChange={(e) => onAlgorithmChange(e.target.value as SchedulingAlgorithm)}
-            className="bg-transparent text-slate-700 outline-none cursor-pointer"
-          >
-            <option value="FCFS">FCFS</option>
-            <option value="SJF">SJF</option>
-            <option value="Priority-Preemptive">Priority (Pre)</option>
-            <option value="Priority-Non-Preemptive">Priority (Non-Pre)</option>
-            <option value="Round Robin">Round Robin</option>
-          </select>
+          {isLoading ? (
+            <span className="text-sm text-slate-600">Loading...</span>
+          ) : (
+            <select
+              value={currentAlgorithmId}
+              onChange={(e) => onAlgorithmChange(e.target.value)}
+              className="bg-transparent text-sm text-slate-700 outline-none cursor-pointer"
+            >
+              {algorithms.map(algo => (
+                <option key={algo.id} value={algo.id}>
+                  {algo.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Quantum Control */}
-        {currentAlgorithm === 'Round Robin' && onQuantumChange && (
+        {requiresQuantum && onQuantumChange && (
           <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200">
             <Clock className="w-5 h-5 text-orange-600" />
             <div className="flex flex-col">
-              <span className="text-slate-600">Quantum</span>
+              <span className="text-xs text-slate-600">Quantum</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -132,15 +151,13 @@ export function SimulationControls({
                   step="1"
                   value={quantum}
                   onChange={(e) => onQuantumChange(parseInt(e.target.value) || 1)}
-                  className="w-16 px-2 py-1 text-center bg-white border border-orange-300 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-16 px-2 py-1 text-center text-sm bg-white border border-orange-300 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-orange-500"
                 />
-                <span className="text-slate-600">units</span>
+                <span className="text-xs text-slate-600">units</span>
               </div>
             </div>
           </div>
         )}
-
-     
       </div>
     </div>
   );
