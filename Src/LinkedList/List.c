@@ -34,8 +34,8 @@ void add_tail(list *l, void *dataToAdd) {
     if (!nw) return;
 
     nw->data = dataToAdd;
-    nw->prev = NULL;
-    nw->suiv = l->head;
+    nw->suiv = NULL;
+    nw->prev = l->tail;
 
     if (l->sz == 0){
         l->head = l->tail = nw;
