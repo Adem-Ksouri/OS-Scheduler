@@ -70,7 +70,11 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
         int r = l + exec_time;
         exec->events = get_events(curr->p.events, curr->p.nbEvents, l, r);
 
-        add_tail(result, exec);
+        node* lst = result->tail;
+        if (lst != NULL && ((execute*)lst->data)->p->pid == exec->p->pid)
+            ((execute*)lst->data)->te = exec->te;
+        else
+            add_tail(result, exec);
 
         curr->cpu_usage++;
 
