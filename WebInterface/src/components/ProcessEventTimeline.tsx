@@ -44,7 +44,6 @@ export function ProcessEventTimeline({
               animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-r from-slate-50 to-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-x-hidden"
             >
-              {/* Process Header */}
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className="w-5 h-5 rounded-md shadow-sm"
@@ -58,16 +57,13 @@ export function ProcessEventTimeline({
                 </div>
               </div>
 
-              {/* Timeline Container */}
               <div className="relative overflow-x-auto pb-2">
                 <div
                   className="relative h-12 bg-slate-100 rounded-lg border border-slate-300 shadow-inner"
                   style={{ width: `${timelineWidth}px`, minWidth: '300px' }}
                 >
-                  {/* Timeline track */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 opacity-60 rounded-lg" />
 
-                  {/* Time markers */}
                   {Array.from({ length: process.exec_time + 1 }).map((_, i) => (
                     <div
                       key={i}
@@ -79,8 +75,6 @@ export function ProcessEventTimeline({
                       </span>
                     </div>
                   ))}
-
-                  {/* Event markers */}
                   {process.events.map((event, index) => {
                     const position = event.t * PX_PER_UNIT;
                     const isHovered =
@@ -90,7 +84,6 @@ export function ProcessEventTimeline({
 
                     return (
                       <div key={index}>
-                        {/* Event marker line */}
                         <motion.div
                           initial={{ scaleY: 0, opacity: 0 }}
                           animate={{ scaleY: 1, opacity: 1 }}
@@ -112,7 +105,6 @@ export function ProcessEventTimeline({
                           onMouseLeave={() => setHoveredEvent(null)}
                         />
 
-                        {/* Event marker dot */}
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{
@@ -153,7 +145,7 @@ export function ProcessEventTimeline({
                             <div className="text-[10px] text-slate-400 mt-1">
                               Time: {event.t}
                             </div>
-                            {/* Tooltip arrow */}
+                           
                             <div
                               className="absolute w-2 h-2 bg-slate-900 transform rotate-45"
                               style={{
@@ -168,7 +160,7 @@ export function ProcessEventTimeline({
                     );
                   })}
 
-                  {/* Current time indicator (for animation) */}
+                
                   {currentTime >= 0 && currentTime <= process.exec_time && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -183,7 +175,7 @@ export function ProcessEventTimeline({
                   )}
                 </div>
 
-                {/* Scale label */}
+           
                 <div className="text-xs text-slate-400 mt-6 text-center">
                   Timeline scale: 1 unit = {PX_PER_UNIT}px
                 </div>

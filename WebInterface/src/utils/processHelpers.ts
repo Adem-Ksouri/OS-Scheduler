@@ -1,9 +1,7 @@
 import { Process, ProcessState, CPUEvent } from './types';
 import { CPU_OPERATIONS } from './constants';
 
-/**
- * Initialize process states from process list
- */
+
 export function initializeProcessStates(processes: Process[]): ProcessState[] {
   return processes.map((p) => ({
     ...p,
@@ -16,9 +14,6 @@ export function initializeProcessStates(processes: Process[]): ProcessState[] {
   }));
 }
 
-/**
- * Generate random CPU events for a process
- */
 export function generateRandomEvents(exec_time: number): CPUEvent[] {
   if (exec_time < 1) return [];
   
@@ -30,7 +25,6 @@ export function generateRandomEvents(exec_time: number): CPUEvent[] {
     let t: number;
     let attempts = 0;
     
-    // Try to find a unique time that's not at the very end
     do {
       t = Math.floor(Math.random() * (exec_time - 1)) + 1;
       attempts++;
@@ -46,9 +40,7 @@ export function generateRandomEvents(exec_time: number): CPUEvent[] {
   return events.sort((a, b) => a.t - b.t);
 }
 
-/**
- * Generate random processes for simulation
- */
+
 export function generateRandomProcesses(count?: number): Process[] {
   const processCount = count || Math.floor(Math.random() * 6) + 3;
   const newProcesses: Process[] = [];

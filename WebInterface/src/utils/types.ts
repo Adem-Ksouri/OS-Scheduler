@@ -1,8 +1,6 @@
-// Types matching C server structures
-
 export interface CPUEvent {
-  t: number;          // after t seconds of execution
-  comment: string;    // operation description
+  t: number;          
+  comment: string;    
 }
 
 export interface Process {
@@ -19,8 +17,8 @@ export interface Process {
 
 export interface Execute {
   p: Process;
-  ts: number;       // start time
-  te: number;       // end time
+  ts: number;       
+  te: number;       
   events: CPUEvent[];
 }
 

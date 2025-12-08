@@ -40,7 +40,6 @@ export function SimulatorInterface({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const processColorsRef = useRef<Map<number, string>>(new Map());
 
-  // Initialize process colors
   useEffect(() => {
     processes.forEach((p, index) => {
       if (!processColorsRef.current.has(p.pid)) {
@@ -49,7 +48,7 @@ export function SimulatorInterface({
     });
   }, [processes]);
 
-  // Fetch algorithm name
+
   useEffect(() => {
     const loadAlgorithmName = async () => {
       const algorithms = await fetchAlgorithms();
@@ -59,7 +58,6 @@ export function SimulatorInterface({
     loadAlgorithmName();
   }, [currentAlgorithmId]);
 
-  // Run scheduler when algorithm or quantum changes
   useEffect(() => {
     let cancelled = false;
     
@@ -74,11 +72,9 @@ export function SimulatorInterface({
           setExecutes(result);
           const maxTime = result.length > 0 ? Math.max(...result.map(e => e.te)) : 0;
           setTotalTime(maxTime);
-          
-          // Initialize process states
+        
           setProcessStates(initializeProcessStates(processes));
 
-          // Reset simulation
           setCurrentTime(0);
           setGanttBlocks([]);
           setIsRunning(false);
@@ -102,7 +98,7 @@ export function SimulatorInterface({
     };
   }, [processes, currentAlgorithmId, currentQuantum]);
 
-  // Animation loop
+
   useEffect(() => {
     if (isRunning && !isPaused) {
       intervalRef.current = setInterval(() => {
@@ -129,7 +125,6 @@ export function SimulatorInterface({
     };
   }, [isRunning, isPaused, speed, totalTime]);
 
-  // Update gantt blocks and process states based on current time
   useEffect(() => {
     if (executes.length === 0) return;
 
@@ -145,7 +140,7 @@ export function SimulatorInterface({
 
     setGanttBlocks(blocks);
 
-    // Update process states
+  
     setProcessStates(prev => prev.map(state => {
       const processExecutes = executes.filter(
         e => e.p.pid === state.pid && e.ts < currentTime
@@ -280,10 +275,8 @@ export function SimulatorInterface({
       transition={{ duration: 0.5 }}
       className="min-h-screen p-4 lg:p-6 w-full"
     >
-      {/* Main container with max-width constraint */}
       <div className="max-w-[2000px] mx-auto">
-        
-        {/* Header section */}
+      
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-slate-800">OS Process Scheduler Simulator</h1>
@@ -300,13 +293,8 @@ export function SimulatorInterface({
           </p>
         </div>
 
-        {/* Main content grid - LEFT: Charts, RIGHT: Metrics */}
         <div className="grid lg:grid-cols-[1fr,400px] gap-6 mb-6">
-          
-          {/* LEFT COLUMN - Charts with scroll containment */}
           <div className="space-y-6 min-w-0 overflow-hidden">
-            
-            {/* Simulation Controls */}
             <SimulationControls
               isRunning={isRunning}
               isPaused={isPaused}
@@ -322,7 +310,6 @@ export function SimulatorInterface({
               onQuantumChange={setCurrentQuantum}
             />
 
-            {/* Gantt Chart - with overflow containment */}
             <GanttChart
               ganttBlocks={ganttBlocks}
               currentTime={currentTime}
@@ -332,7 +319,6 @@ export function SimulatorInterface({
             />
           </div>
 
-          {/* RIGHT COLUMN - Metrics sidebar */}
           <ProcessMetrics
             processStates={processStates}
             cpuUtilization={cpuUtilization}

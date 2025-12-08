@@ -36,11 +36,11 @@ export function GanttChart({
   const contentWidth = LEFT_PADDING + maxTime * PX_PER_UNIT + RIGHT_PADDING;
   const timeTicks = Array.from({ length: maxTime + 1 }, (_, i) => i);
 
-  // Group blocks by process
+  
   const processBlockGroups = processes.map((process) => {
     const blocks = ganttBlocks.filter((b) => b.pid === process.pid);
 
-    // Merge consecutive blocks
+  
     const merged: GanttBlock[] = [];
     blocks.forEach((block) => {
       const last = merged[merged.length - 1];
@@ -128,7 +128,7 @@ export function GanttChart({
               })}
             </div>
 
-            {/* PROCESS ROWS */}
+          
             <div className="relative z-10">
               {processBlockGroups.map(({ process, blocks }, rowIndex) => {
                 const color = processColors.get(process.pid) || '#3b82f6';
@@ -143,7 +143,6 @@ export function GanttChart({
                       height: `${ROW_HEIGHT}px`,
                     }}
                   >
-                    {/* Process Label */}
                     <div
                       className="absolute left-0 top-0 bottom-0 flex items-center px-4 bg-slate-50 border-r border-slate-200 z-10"
                       style={{ width: `${LEFT_PADDING}px` }}
@@ -162,7 +161,6 @@ export function GanttChart({
                       </div>
                     </div>
 
-                    {/* Event segments for this process */}
                     {blocks.map((block, blockIndex) => {
                       const startX = LEFT_PADDING + block.startTime * PX_PER_UNIT;
                       const duration = block.endTime - block.startTime;
@@ -227,7 +225,6 @@ export function GanttChart({
         )}
       </div>
 
-      {/* LEGENDS */}
       {ganttBlocks.length > 0 && (
         <div className="mt-4 grid md:grid-cols-2 gap-4">
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -269,7 +266,7 @@ export function GanttChart({
   );
 }
 
-// Helper function to calculate event markers
+
 function calculateEventMarkers(
   process: Process,
   block: GanttBlock,
@@ -277,7 +274,7 @@ function calculateEventMarkers(
 ): Array<{ absoluteTime: number; comment: string }> {
   const markers: Array<{ absoluteTime: number; comment: string }> = [];
 
-  // Find all executes for this process up to this block
+ 
   const processExecutes = executes.filter(e => e.p.pid === process.pid && e.ts <= block.startTime);
   
   let executionTimeBeforeBlock = 0;
@@ -330,7 +327,7 @@ function EventSegment({
 
   return (
     <>
-      {/* Move tooltip outside and above the motion.div */}
+    
       {showTooltip && hoveredMarker === null && (
         <motion.div
           initial={{ opacity: 0, y: 5 }}

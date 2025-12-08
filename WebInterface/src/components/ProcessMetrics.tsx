@@ -22,7 +22,7 @@ export function ProcessMetrics({
 }: ProcessMetricsProps) {
   return (
     <div className="space-y-6">
-      {/* Summary Stats */}
+      
       <motion.div
         initial={{ x: 50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -77,7 +77,6 @@ export function ProcessMetrics({
         </div>
       </motion.div>
 
-      {/* Process State Table */}
       <motion.div
         initial={{ x: 50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -144,7 +143,6 @@ export function ProcessMetrics({
                 </div>
               )}
 
-              {/* Progress bar for remaining time */}
               {process.state !== 'Finished' && (
                 <div className="mt-3">
                   <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -168,7 +166,7 @@ export function ProcessMetrics({
         </div>
       </motion.div>
 
-      {/* Detailed Metrics */}
+  
       <motion.div
         initial={{ x: 50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}

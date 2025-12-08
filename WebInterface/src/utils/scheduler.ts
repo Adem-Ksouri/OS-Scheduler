@@ -1,16 +1,12 @@
 import { Process, Execute } from './types';
 import * as API from './api';
 
-/**
- * Main scheduler function with server-first approach
- * Falls back to local computation if server fails
- */
 export async function runScheduler(
   processes: Process[],
   algorithmId: string,
   quantum: number = 4
 ): Promise<Execute[]> {
-  // Try server first
+  
   try {
     console.log('Attempting to use server for scheduling...');
     const executes = await API.executeScheduling(processes, algorithmId, quantum);
@@ -20,14 +16,11 @@ export async function runScheduler(
     console.warn('Server scheduling failed, using local fallback:', error);
   }
 
-  // Fallback to local computation
+ 
   console.log('✓ Using local scheduling computation');
   return runSchedulerLocal(processes, algorithmId, quantum);
 }
 
-/**
- * Local scheduler implementation (fallback)
- */
 function runSchedulerLocal(
   processes: Process[],
   algorithmId: string,
@@ -50,9 +43,6 @@ function runSchedulerLocal(
   }
 }
 
-// ============================================================================
-// Local Algorithm Implementations
-// ============================================================================
 
 function runFCFS(processes: Process[]): Execute[] {
   const executes: Execute[] = [];

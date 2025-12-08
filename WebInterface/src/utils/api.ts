@@ -1,4 +1,4 @@
-// API Service for scheduler server communication
+
 import { CPUEvent } from './types';
 
 export interface ServerProcess {
@@ -53,13 +53,9 @@ export interface AlgorithmInfo {
   requiresQuantum: boolean;
 }
 
-// Configuration - Update this URL to your actual server endpoint
 const API_BASE_URL = 'https://your-scheduler-api.com/api';
-const REQUEST_TIMEOUT = 5000; // 5 seconds
+const REQUEST_TIMEOUT = 5000; 
 
-/**
- * Fetch available scheduling algorithms from server
- */
 export async function fetchAlgorithms(): Promise<AlgorithmInfo[]> {
   try {
     const controller = new AbortController();
@@ -81,7 +77,6 @@ export async function fetchAlgorithms(): Promise<AlgorithmInfo[]> {
 
     const data = await response.json();
     
-    // Validate response
     if (!Array.isArray(data.algorithms)) {
       throw new Error('Invalid response format');
     }
@@ -89,14 +84,11 @@ export async function fetchAlgorithms(): Promise<AlgorithmInfo[]> {
     return data.algorithms as AlgorithmInfo[];
   } catch (error) {
     console.error('Failed to fetch algorithms from server:', error);
-    // Return fallback algorithms
+ 
     return getFallbackAlgorithms();
   }
 }
 
-/**
- * Execute scheduling algorithm on server
- */
 export async function executeScheduling(
   processes: ServerProcess[],
   algorithmId: string,
@@ -129,7 +121,6 @@ export async function executeScheduling(
 
     const data = await response.json();
 
-    // Validate response structure
     if (!data.timeline || !data.finalStates) {
       throw new Error('Invalid server response format');
     }
@@ -141,21 +132,15 @@ export async function executeScheduling(
     };
   } catch (error) {
     console.error('Server scheduling failed:', error);
-    throw error; // Throw to trigger fallback
+    throw error; 
   }
 }
 
-/**
- * Calculate total time from timeline
- */
 function calculateTotalTime(timeline: SchedulerEvent[]): number {
   if (timeline.length === 0) return 0;
   return Math.max(...timeline.map(e => e.endTime));
 }
 
-/**
- * Fallback algorithms when server is unavailable
- */
 function getFallbackAlgorithms(): AlgorithmInfo[] {
   return [
     {
@@ -191,9 +176,7 @@ function getFallbackAlgorithms(): AlgorithmInfo[] {
   ];
 }
 
-/**
- * Test server connectivity
- */
+
 export async function testServerConnection(): Promise<boolean> {
   try {
     const controller = new AbortController();

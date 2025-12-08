@@ -51,7 +51,7 @@ export function SimulationControls({
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center gap-4">
-        {/* Playback Controls */}
+      
         <div className="flex items-center gap-2">
           <button
             onClick={onPlayPause}
@@ -92,13 +92,11 @@ export function SimulationControls({
           </button>
         </div>
 
-        {/* Time Display */}
         <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
           <div className="text-xs text-slate-600">Current Time</div>
           <div className="text-sm font-mono text-slate-800">{currentTime} units</div>
         </div>
 
-        {/* Speed Control */}
         <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
           <Gauge className="w-5 h-5 text-slate-600" />
           <div className="flex flex-col">
@@ -118,7 +116,6 @@ export function SimulationControls({
           </div>
         </div>
 
-        {/* Algorithm Switch */}
         <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
           {isLoading ? (
             <span className="text-sm text-slate-600">Loading...</span>
@@ -137,7 +134,6 @@ export function SimulationControls({
           )}
         </div>
 
-        {/* Quantum Control */}
         {requiresQuantum && onQuantumChange && (
           <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200">
             <Clock className="w-5 h-5 text-orange-600" />
