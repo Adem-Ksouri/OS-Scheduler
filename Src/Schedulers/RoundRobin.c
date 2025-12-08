@@ -52,7 +52,7 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
             result = realloc(result, sizeof(execute) * capacity);
         }
 
-        result[count++] = make_execute(p, ts, te, current_events);
+        result[count++] = make_execute(p, ts, te, cnte, current_events);
 
         now = te;
 

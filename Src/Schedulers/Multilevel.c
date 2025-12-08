@@ -50,9 +50,8 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
         int evt_cnt;
         event* ev_list = getEvents(*curr, l, r, &evt_cnt);
 
-        execute* exec = malloc(sizeof(execute));
-        *exec = make_execute(curr, *currTime, *currTime + exec_time, ev_list);
-
+        execute* exec = (execute*)malloc(sizeof(execute));
+        *exec = make_execute(curr, *currTime, *currTime + exec_time, evt_cnt, ev_list);
 
         node* lst = result->tail;
         if (lst != NULL && ((execute*)lst->data)->p->pid == exec->p->pid)
