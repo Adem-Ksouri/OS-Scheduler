@@ -27,7 +27,7 @@ event* getEvents(process p, int tl, int tr, int* out_count) {
     int count = 0;
 
     while (st < p.nbEvents) {
-        if (p.events[st].t > tr)
+        if (p.events[st].t >= tr)
             break;
 
         result = realloc(result, (count + 1) * sizeof(event));

@@ -2,14 +2,21 @@
 #include <string.h>
 #include "../../Include/Helpers.h"
 
+event getEventForTest(int t, char* comment){
+    event event;
+    event.t = t;
+    strcpy(event.comment, comment);
+    return event;
+}
+
+
 event* getEventsForTest(){
-    event e1;
-    e1.t = 1;
-    strcpy(e1.comment, "gg");
+    event e1 = getEventForTest(0, "output after 0 units");
+    event e2 = getEventForTest(2, "output after 2 units");
 
     event* e = (event*)malloc(2 * sizeof(event));
     e[0] = e1;
-    e[1] = e1;
+    e[1] = e2;
 
     return e;
 }
@@ -61,7 +68,6 @@ process* getDefaultProcessForTest(int pid){
 }
 
 process* getProcessForTest(int pid, int ppid, char* name, int arrival, int exec_time, int priority, int nbEvents, event* events){
-    event* e = getEventsForTest();
     process* ret = (process*)malloc(sizeof(process));
     ret->pid = pid;
     ret->ppid = ppid;
@@ -69,6 +75,7 @@ process* getProcessForTest(int pid, int ppid, char* name, int arrival, int exec_
     ret->arrival = arrival;
     ret->exec_time = exec_time;
     ret->rem_time = exec_time;
+    ret->cpu_usage = 0;
     ret->priority = priority;
     ret->nbEvents = nbEvents;
     ret->events = events;

@@ -7,8 +7,6 @@
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-
-
 void add_to_queue(queue* q, process* p){
     queue tmp = create_queue();
     while (size(*q) > 0){
@@ -34,6 +32,14 @@ int get_higher_priority(queue* queues, int nbPriority){
     }
     return -1;
 }
+
+void appendEvents(event** events, int eventsCount, event* eventsToAdd, int eventsToAddCount){
+    int totalEventsCount = eventsCount + eventsToAddCount;
+    *events = realloc(*events, totalEventsCount * sizeof(event));
+
+    for (int i = 0; i < eventsToAddCount; i++) (*events)[eventsCount + i] = eventsToAdd[i];
+}
+
 void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime, list* result, int cpu_usage_limit){
     while (*currTime < nxtTime){
         int priority = get_higher_priority(queues, nbPriority);
@@ -54,8 +60,11 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
         *exec = make_execute(curr, *currTime, *currTime + exec_time, evt_cnt, ev_list);
 
         node* lst = result->tail;
-        if (lst != NULL && ((execute*)lst->data)->p->pid == exec->p->pid)
+        if (lst != NULL && ((execute*)lst->data)->p->pid == exec->p->pid){
             ((execute*)lst->data)->te = exec->te;
+            appendEvents(&((execute*)lst->data)->events, ((execute*)lst->data)->event_count, ev_list, evt_cnt);
+            ((execute*)lst->data)->event_count += evt_cnt;
+        }
         else
             add_tail(result, exec);
 
@@ -78,9 +87,7 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
     }
 }
 
-
 execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *out_cnt, int cpu_usage_limit){
-  
     queue* queues = (queue*)malloc(nbPriority * sizeof(queue));
     for (int i = 0; i < nbPriority; i++)
         queues[i] = create_queue();
@@ -88,13 +95,6 @@ execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *ou
     list* result = create_list();
 
     qsort(processes, n, sizeof(process), compare_process);
-
-   
-    for (int i = 0; i < n; i++){
-        processes[i].cpu_usage = 0;
-       
-        processes[i].rem_time = processes[i].exec_time;
-    }
 
     int currTime = 0;
     for (int i = 0; i < n; i++){
@@ -110,6 +110,7 @@ execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *ou
         currTime = nxtTime;
         i = j - 1;
     }
+
     *out_cnt = getsz(result);
     execute* output = (execute*)malloc(*out_cnt * sizeof(execute));
     node* curr = result->head;
@@ -117,5 +118,6 @@ execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *ou
         output[i] = *(execute*)curr->data;
         curr = curr->suiv;
     }
+
     return output;
 }

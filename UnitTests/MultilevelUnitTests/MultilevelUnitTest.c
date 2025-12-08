@@ -10,10 +10,14 @@ int main() {
     process* input = getProcessesForTest();
 
     int out_count = 0;
-    execute* output = multilevel_scheduler(input, 4, 8, &out_count, 3);
+    execute* output = multilevel_scheduler(input, 4, 10, &out_count, 3);
 
     for (int i = 0; i < out_count; i++) {
         printf("%s %d %d\n", output[i].p->name, output[i].ts, output[i].te);
+        printf("number of events is %d :\n", output[i].event_count);
+        for (int j = 0; j < output[i].event_count; j++)
+            printf("%d %s\n",output[i].events[j].t, output[i].events[j].comment);
+        printf("\n");
     }
 
     return 0;
