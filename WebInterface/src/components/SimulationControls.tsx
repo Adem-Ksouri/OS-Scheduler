@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Pause, SkipForward, RotateCcw, Gauge, Clock } from 'lucide-react';
 import { AlgorithmInfo } from '../utils/types';
-import { fetchAlgorithms } from '../utils/api';
+import { getAvailableAlgorithms } from '../utils/scheduler';
 
 interface SimulationControlsProps {
   isRunning: boolean;
@@ -33,16 +33,13 @@ export function SimulationControls({
   onQuantumChange,
 }: SimulationControlsProps) {
   const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadAlgorithms = async () => {
-      setIsLoading(true);
-      const algos = await fetchAlgorithms();
+    const fetchAlgorithms = async () => {
+      const algos = await getAvailableAlgorithms();
       setAlgorithms(algos);
-      setIsLoading(false);
     };
-    loadAlgorithms();
+    fetchAlgorithms();
   }, []);
 
   const selectedAlgo = algorithms.find(a => a.id === currentAlgorithmId);
@@ -51,11 +48,10 @@ export function SimulationControls({
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center gap-4">
-      
         <div className="flex items-center gap-2">
           <button
             onClick={onPlayPause}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all shadow-md ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all shadow-md font-medium ${
               isRunning && !isPaused
                 ? 'bg-amber-500 hover:bg-amber-600 text-white'
                 : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
@@ -94,7 +90,7 @@ export function SimulationControls({
 
         <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
           <div className="text-xs text-slate-600">Current Time</div>
-          <div className="text-sm font-mono text-slate-800">{currentTime} units</div>
+          <div className="text-sm font-mono font-semibold text-slate-800">{currentTime} units</div>
         </div>
 
         <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
@@ -111,27 +107,23 @@ export function SimulationControls({
                 onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
                 className="w-24 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <span className="text-sm text-slate-700 min-w-[40px]">{speed}x</span>
+              <span className="text-sm font-medium text-slate-700 min-w-[40px]">{speed}x</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-          {isLoading ? (
-            <span className="text-sm text-slate-600">Loading...</span>
-          ) : (
-            <select
-              value={currentAlgorithmId}
-              onChange={(e) => onAlgorithmChange(e.target.value)}
-              className="bg-transparent text-sm text-slate-700 outline-none cursor-pointer"
-            >
-              {algorithms.map(algo => (
-                <option key={algo.id} value={algo.id}>
-                  {algo.name}
-                </option>
-              ))}
-            </select>
-          )}
+          <select
+            value={currentAlgorithmId}
+            onChange={(e) => onAlgorithmChange(e.target.value)}
+            className="bg-transparent text-sm font-medium text-slate-700 outline-none cursor-pointer"
+          >
+            {algorithms.map(algo => (
+              <option key={algo.id} value={algo.id}>
+                {algo.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {requiresQuantum && onQuantumChange && (

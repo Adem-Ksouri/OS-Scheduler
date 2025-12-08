@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Process, Execute, GanttBlock, ProcessState } from '../utils/types';
+import { Process, Execute, GanttBlock, ProcessState, AlgorithmInfo } from '../utils/types';
 import { SimulationControls } from './SimulationControls';
 import { GanttChart } from './GanttChart';
 import { ProcessMetrics } from './ProcessMetrics';
-import { runScheduler } from '../utils/scheduler';
+import { runScheduler, getAvailableAlgorithms } from '../utils/scheduler';
 import { PROCESS_COLORS } from '../utils/constants';
 import { initializeProcessStates } from '../utils/processHelpers';
-import { fetchAlgorithms } from '../utils/api';
 
 interface SimulatorInterfaceProps {
   processes: Process[];
@@ -33,6 +32,7 @@ export function SimulatorInterface({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [algorithmName, setAlgorithmName] = useState<string>('');
+  const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
   
   const [executes, setExecutes] = useState<Execute[]>([]);
   const [totalTime, setTotalTime] = useState(0);
@@ -48,14 +48,14 @@ export function SimulatorInterface({
     });
   }, [processes]);
 
-
   useEffect(() => {
-    const loadAlgorithmName = async () => {
-      const algorithms = await fetchAlgorithms();
-      const algo = algorithms.find(a => a.id === currentAlgorithmId);
+    const fetchAlgorithms = async () => {
+      const algos = await getAvailableAlgorithms();
+      setAlgorithms(algos);
+      const algo = algos.find(a => a.id === currentAlgorithmId);
       setAlgorithmName(algo?.name || currentAlgorithmId);
     };
-    loadAlgorithmName();
+    fetchAlgorithms();
   }, [currentAlgorithmId]);
 
   useEffect(() => {
@@ -74,7 +74,6 @@ export function SimulatorInterface({
           setTotalTime(maxTime);
         
           setProcessStates(initializeProcessStates(processes));
-
           setCurrentTime(0);
           setGanttBlocks([]);
           setIsRunning(false);
@@ -82,7 +81,7 @@ export function SimulatorInterface({
         }
       } catch (err) {
         if (!cancelled) {
-          setError('Failed to compute schedule. Please try again.');
+          setError('Failed to compute schedule. Using fallback data.');
           console.error('Scheduler error:', err);
         }
       } finally {
@@ -97,7 +96,6 @@ export function SimulatorInterface({
       cancelled = true;
     };
   }, [processes, currentAlgorithmId, currentQuantum]);
-
 
   useEffect(() => {
     if (isRunning && !isPaused) {
@@ -140,7 +138,6 @@ export function SimulatorInterface({
 
     setGanttBlocks(blocks);
 
-  
     setProcessStates(prev => prev.map(state => {
       const processExecutes = executes.filter(
         e => e.p.pid === state.pid && e.ts < currentTime
@@ -244,8 +241,8 @@ export function SimulatorInterface({
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Computing schedule...</p>
-          <p className="text-slate-400 text-sm mt-2">Trying server, will fallback to local if needed</p>
+          <p className="text-slate-600 font-medium">Computing schedule...</p>
+          <p className="text-slate-400 text-sm mt-2">Using static fallback data</p>
         </div>
       </div>
     );
@@ -259,7 +256,7 @@ export function SimulatorInterface({
           <p className="text-red-600 mb-4">{error}</p>
           <button
             onClick={onReset}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl"
+            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
           >
             Back to Setup
           </button>
@@ -276,20 +273,19 @@ export function SimulatorInterface({
       className="min-h-screen p-4 lg:p-6 w-full"
     >
       <div className="max-w-[2000px] mx-auto">
-      
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-slate-800">OS Process Scheduler Simulator</h1>
+            <h1 className="text-3xl font-bold text-slate-800">OS Process Scheduler Simulator</h1>
             <button
               onClick={onReset}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl transition-colors"
+              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl transition-colors font-medium"
             >
               Back to Setup
             </button>
           </div>
           <p className="text-slate-600">
-            Algorithm: <span className="text-slate-800">{algorithmName}</span>
-            {currentAlgorithmId === 'RR' && ` (Quantum: ${currentQuantum})`}
+            Algorithm: <span className="font-semibold text-slate-800">{algorithmName}</span>
+            {algorithms.find(a => a.id === currentAlgorithmId)?.requiresQuantum && ` (Quantum: ${currentQuantum})`}
           </p>
         </div>
 

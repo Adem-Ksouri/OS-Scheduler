@@ -21,9 +21,10 @@ export function ProcessTable({ processes, setProcesses }: ProcessTableProps) {
       arrival: 0,
       exec_time: 5,
       rem_time: 5,
+      cpu_usage: 0,
       priority: 1,
       nbEvents: 1,
-      events: [{ t: 2, comment: "Calculate A + B" }],
+      events: [{ t: 2, comment: "Add" }],
     };
     setProcesses([...processes, newProcess]);
     setEditingPid(newPid);
@@ -53,6 +54,7 @@ export function ProcessTable({ processes, setProcesses }: ProcessTableProps) {
       const updatedProcess = {
         ...editForm,
         rem_time: editForm.exec_time || 0,
+        cpu_usage: 0,
         nbEvents: (editForm.events || []).length,
       } as Process;
 
@@ -78,7 +80,7 @@ export function ProcessTable({ processes, setProcesses }: ProcessTableProps) {
     );
     const newEvents = [
       ...(editForm.events || []),
-      { t: newTime, comment: "Calculate A + B" },
+      { t: newTime, comment: "Add" },
     ];
     newEvents.sort((a, b) => a.t - b.t);
     setEditForm({ ...editForm, events: newEvents });
@@ -168,7 +170,7 @@ export function ProcessTable({ processes, setProcesses }: ProcessTableProps) {
               <div className="p-3 bg-white rounded-lg border border-slate-200">
                 <h4 className="text-slate-700 mb-3 flex items-center gap-2">
                   <span className="text-blue-600">◆</span>
-                  CPU Operations List
+                  CPU Operations
                 </h4>
                 <div className="space-y-2 mb-3">
                   {(editForm.events || []).map((event, index) => (

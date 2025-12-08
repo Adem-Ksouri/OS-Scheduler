@@ -1,106 +1,42 @@
+import { Process, Execute , AlgorithmInfo} from './types';
+import React from 'react';
 
-import { CPUEvent } from './types';
 
-export interface ServerProcess {
-  id: string;
-  arrivalTime: number;
-  burstTime: number;
-  priority?: number;
-  events: Array<{ time: number; operation: string }>;
+const API_BASE_URL =  import.meta.env.VITE_API_SERVER_URL;
+
+
+const REQUEST_TIMEOUT = 10000; 
+
+
+export interface ScheduleRequest {
+  processes: Process[];
+  algorithm: string;
+  quantum?: number;
 }
 
-export interface SchedulerEvent {
-  processId: string;
-  startTime: number;
-  endTime: number;
-  eventType: string;
-  duration: number;
-  processState: {
-    remainingTime: number;
-    arrivalTime: number;
-    burstTime: number;
-    priority?: number;
-  };
-}
 
-export interface ProcessExecutionState {
-  id: string;
-  arrivalTime: number;
-  burstTime: number;
-  priority?: number;
-  remainingTime: number;
-  waitingTime: number;
-  turnaroundTime: number;
-  responseTime: number;
-  completionTime: number;
-  firstResponseTime: number | null;
-  state: 'Not Arrived' | 'Ready' | 'Running' | 'Finished';
-  currentEventIndex: number;
-  currentEventProgress: number;
-  events: CPUEvent[];
-}
 
-export interface SchedulerResult {
-  timeline: SchedulerEvent[];
-  finalStates: ProcessExecutionState[];
+export interface ScheduleResponse {
+  executes: Execute[];
   totalTime: number;
+  success: boolean;
+  error?: string;
 }
 
-export interface AlgorithmInfo {
-  id: string;
-  name: string;
-  description: string;
-  requiresQuantum: boolean;
-}
 
-const API_BASE_URL = 'https://your-scheduler-api.com/api';
-const REQUEST_TIMEOUT = 5000; 
-
-export async function fetchAlgorithms(): Promise<AlgorithmInfo[]> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-
-    const response = await fetch(`${API_BASE_URL}/algorithms`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (!Array.isArray(data.algorithms)) {
-      throw new Error('Invalid response format');
-    }
-
-    return data.algorithms as AlgorithmInfo[];
-  } catch (error) {
-    console.error('Failed to fetch algorithms from server:', error);
- 
-    return getFallbackAlgorithms();
-  }
-}
-
-export async function executeScheduling(
-  processes: ServerProcess[],
-  algorithmId: string,
+export async function scheduleProcesses(
+  processes: Process[],
+  algorithm: string,
   quantum?: number
-): Promise<SchedulerResult> {
+): Promise<Execute[]> {
+  
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-    const requestBody = {
+    const requestBody: ScheduleRequest = {
       processes,
-      algorithm: algorithmId,
+      algorithm,
       quantum,
     };
 
@@ -116,80 +52,58 @@ export async function executeScheduling(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
+      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data: ScheduleResponse = await response.json();
 
-    if (!data.timeline || !data.finalStates) {
-      throw new Error('Invalid server response format');
+    if (!data.success || !data.executes) {
+      throw new Error(data.error || 'Invalid server response');
     }
 
-    return {
-      timeline: data.timeline,
-      finalStates: data.finalStates,
-      totalTime: data.totalTime || calculateTotalTime(data.timeline),
-    };
+    return data.executes;
+    
   } catch (error) {
-    console.error('Server scheduling failed:', error);
-    throw error; 
+    console.error('Failed to schedule processes:', error);
+    throw error;
   }
 }
 
-function calculateTotalTime(timeline: SchedulerEvent[]): number {
-  if (timeline.length === 0) return 0;
-  return Math.max(...timeline.map(e => e.endTime));
-}
 
-function getFallbackAlgorithms(): AlgorithmInfo[] {
-  return [
-    {
-      id: 'FCFS',
-      name: 'First Come First Served (FCFS)',
-      description: 'Processes are executed in the order they arrive',
-      requiresQuantum: false,
-    },
-    {
-      id: 'SJF',
-      name: 'Shortest Job First (SJF)',
-      description: 'Process with shortest burst time is executed first',
-      requiresQuantum: false,
-    },
-    {
-      id: 'Priority-Preemptive',
-      name: 'Priority Scheduling (Preemptive)',
-      description: 'Higher priority processes can preempt lower priority ones',
-      requiresQuantum: false,
-    },
-    {
-      id: 'Priority-Non-Preemptive',
-      name: 'Priority Scheduling (Non-Preemptive)',
-      description: 'Higher priority processes are scheduled first without preemption',
-      requiresQuantum: false,
-    },
-    {
-      id: 'Round Robin',
-      name: 'Round Robin (RR)',
-      description: 'Each process gets a fixed time quantum in circular order',
-      requiresQuantum: true,
-    },
-  ];
-}
+/**
+ * Get server status and available algorithms
+ */
+export async function getServerStatus(): Promise<{
+  online: boolean;
+  algorithms: AlgorithmInfo[];
 
-
-export async function testServerConnection(): Promise<boolean> {
+}> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-    const response = await fetch(`${API_BASE_URL}/health`, {
+    const response = await fetch(`${API_BASE_URL}/status`, {
       method: 'GET',
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
-    return response.ok;
+
+    if (!response.ok) {
+      return { online: false ,
+        algorithms:[],
+       };
+    }
+
+    const data = await response.json();
+    return {
+      online: true,
+      algorithms: data.algorithms,
+  
+    };
   } catch {
-    return false;
+    return { online: false  ,
+        algorithms:[],
+       };
   }
 }

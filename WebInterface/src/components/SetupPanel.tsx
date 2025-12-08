@@ -3,7 +3,7 @@ import { Play, Shuffle, Info } from 'lucide-react';
 import { Process, AlgorithmInfo } from '../utils/types';
 import { ProcessTable } from './ProcessTable';
 import { generateRandomProcesses } from '../utils/processHelpers';
-import { fetchAlgorithms } from '../utils/api';
+import { getAvailableAlgorithms } from '../utils/scheduler';
 
 interface SetupPanelProps {
   onStartSimulation: (
@@ -22,6 +22,7 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
       arrival: 0,
       exec_time: 7,
       rem_time: 7,
+      cpu_usage: 0,
       priority: 2,
       nbEvents: 2,
       events: [
@@ -36,6 +37,7 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
       arrival: 1,
       exec_time: 4,
       rem_time: 4,
+      cpu_usage: 0,
       priority: 1,
       nbEvents: 1,
       events: [
@@ -49,10 +51,11 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
       arrival: 2,
       exec_time: 8,
       rem_time: 8,
+      cpu_usage: 0,
       priority: 3,
       nbEvents: 2,
       events: [
-        { t: 3, comment: 'Load data from memory' },
+         { t: 3, comment: 'Load data from memory' },
         { t: 6, comment: 'Write to cache' },
       ],
     },
@@ -63,38 +66,31 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
       arrival: 3,
       exec_time: 5,
       rem_time: 5,
+      cpu_usage: 0,
       priority: 2,
       nbEvents: 1,
       events: [
-        { t: 2, comment: 'Multiply operands' },
+         { t: 2, comment: 'Multiply operands' },
       ],
     },
   ]);
+  
   const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('FCFS');
   const [quantum, setQuantum] = useState(4);
   const [isLoadingAlgorithms, setIsLoadingAlgorithms] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    const loadAlgorithms = async () => {
+    const fetchAlgorithms = async () => {
       setIsLoadingAlgorithms(true);
-      const algos = await fetchAlgorithms();
-      if (mounted) {
-        setAlgorithms(algos);
-        if (algos.length > 0 && !selectedAlgorithm) {
-          setSelectedAlgorithm(algos[0].id);
-        }
-        setIsLoadingAlgorithms(false);
+      const algos = await getAvailableAlgorithms();
+      setAlgorithms(algos);
+      if (algos.length > 0) {
+        setSelectedAlgorithm(algos[0].id);
       }
+      setIsLoadingAlgorithms(false);
     };
-
-    loadAlgorithms();
-
-    return () => {
-      mounted = false;
-    };
+    fetchAlgorithms();
   }, []);
 
   const handleGenerateRandom = () => {
@@ -120,7 +116,7 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
     <div className="min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-6xl">
         <div className="text-center mb-8">
-          <h1 className="text-slate-800 mb-2">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">
             OS Process Scheduler Simulator
           </h1>
           <p className="text-slate-600">
@@ -133,8 +129,8 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
             <div className="p-8 border-r border-slate-200">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-slate-800 mb-1">Process Configuration</h2>
-                  <p className="text-slate-500">Add and configure processes with CPU events</p>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-1">Process Configuration</h2>
+                  <p className="text-sm text-slate-500">Add and configure processes with CPU events</p>
                 </div>
                 <button
                   onClick={handleGenerateRandom}
@@ -150,19 +146,18 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
             </div>
 
             <div className="p-8 bg-gradient-to-br from-slate-50 to-blue-50">
-              <h2 className="text-slate-800 mb-6">Algorithm & Settings</h2>
+              <h2 className="text-xl font-semibold text-slate-800 mb-6">Algorithm & Settings</h2>
 
               <div className="mb-6">
-                <label className="block text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Scheduling Algorithm
                   <span className="ml-1 text-slate-400 cursor-help" title="Select the CPU scheduling algorithm to simulate">
                     <Info className="w-3 h-3 inline" />
                   </span>
                 </label>
                 {isLoadingAlgorithms ? (
-                  <div className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-                    <span className="text-slate-600">Loading algorithms...</span>
+                  <div className="w-full px-4 py-3 bg-slate-100 border border-slate-300 rounded-xl text-slate-500">
+                    Loading algorithms...
                   </div>
                 ) : (
                   <select
@@ -181,7 +176,7 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
 
               {selectedAlgoInfo?.requiresQuantum && (
                 <div className="mb-6 p-4 bg-blue-100 rounded-xl border border-blue-200">
-                  <label className="block text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Time Quantum
                     <span className="ml-1 text-slate-400 cursor-help" title="Maximum time slice for each process">
                       <Info className="w-3 h-3 inline" />
@@ -201,8 +196,8 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
               <div className="space-y-3">
                 <button
                   onClick={handleStart}
-                  disabled={processes.length === 0 || !selectedAlgorithm}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={processes.length === 0 || !selectedAlgorithm || isLoadingAlgorithms}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                 >
                   <Play className="w-5 h-5" />
                   Start Simulation
@@ -219,7 +214,7 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
           </div>
         </div>
 
-        <div className="text-center mt-6 text-slate-500">
+        <div className="text-center mt-6 text-sm text-slate-500">
           <p>Configure processes and click "Start Simulation" to reveal the interactive timeline and metrics</p>
         </div>
       </div>

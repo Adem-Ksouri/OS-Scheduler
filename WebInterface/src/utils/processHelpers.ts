@@ -1,7 +1,6 @@
 import { Process, ProcessState, CPUEvent } from './types';
 import { CPU_OPERATIONS } from './constants';
 
-
 export function initializeProcessStates(processes: Process[]): ProcessState[] {
   return processes.map((p) => ({
     ...p,
@@ -40,7 +39,6 @@ export function generateRandomEvents(exec_time: number): CPUEvent[] {
   return events.sort((a, b) => a.t - b.t);
 }
 
-
 export function generateRandomProcesses(count?: number): Process[] {
   const processCount = count || Math.floor(Math.random() * 6) + 3;
   const newProcesses: Process[] = [];
@@ -56,6 +54,7 @@ export function generateRandomProcesses(count?: number): Process[] {
       arrival: Math.floor(Math.random() * 5),
       exec_time,
       rem_time: exec_time,
+      cpu_usage: 0,
       priority: Math.floor(Math.random() * 5) + 1,
       nbEvents: events.length,
       events,

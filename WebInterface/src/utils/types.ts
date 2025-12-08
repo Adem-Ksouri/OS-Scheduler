@@ -3,22 +3,26 @@ export interface CPUEvent {
   comment: string;    
 }
 
+
 export interface Process {
   pid: number;
   ppid: number;
-  name: string;
+  name: string;       
   arrival: number;
   exec_time: number;
   rem_time: number;
+  cpu_usage: number;
   priority: number;
   nbEvents: number;
   events: CPUEvent[];
 }
 
+
 export interface Execute {
   p: Process;
-  ts: number;       
-  te: number;       
+  ts: number;         
+  te: number;   
+  event_count:number;      
   events: CPUEvent[];
 }
 
