@@ -15,6 +15,7 @@ typedef struct{
     int arrival;
     int exec_time;
     int rem_time;
+    int cpu_usage;
     int priority;
     int nbEvents;
     event* events;
