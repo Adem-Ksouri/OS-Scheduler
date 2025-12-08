@@ -18,8 +18,7 @@ execute* pp_scheduler(process* processes, int n, int *out_cnt) {
                 mxPriority = processes[i].priority;
             }
         }
-        //when all processes with arrival < currTime have completed 
-        //then we will assign the first process that comes the first and have the max priority
+        
         if(idx == -1){
             for(int i=0;i<n;i++){
                 if(!ok[i]){
@@ -28,7 +27,6 @@ execute* pp_scheduler(process* processes, int n, int *out_cnt) {
                 }
             }
         }
-        //when there is no process running 
         if(currIdx == -1){
             sz++;
             result = realloc(result, sz*sizeof(execute));
@@ -37,7 +35,7 @@ execute* pp_scheduler(process* processes, int n, int *out_cnt) {
             result[sz-1]=make_execute(&processes[idx],ts,te,processes[idx].events);
             currIdx = idx;
         }
-        //if a process with a higher priority than the running one comes
+
         else if(processes[currIdx].priority < mxPriority){
             result[sz-1].te = processes[idx].arrival;
             processes[currIdx].exec_time -= processes[currIdx].exec_time - (currTime -processes[idx].arrival);

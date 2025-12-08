@@ -10,7 +10,7 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
 
     int run_time;
     int now = 0;
-    int index = 0; // next process to insert into queue
+    int index = 0;
 
     int capacity = 4;
     int count = 0;
@@ -43,7 +43,6 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
 
         p->rem_time -= run_time; 
 
-        // get events
         int cnte;
         event* current_events = getEvents(*p, ts, te, &cnte);
 
@@ -51,18 +50,16 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
             capacity *= 2;
             result = realloc(result, sizeof(execute) * capacity);
         }
-
-        result[count++] = make_execute(p, ts, te, current_events);
+        count++;
+        result[count] = make_execute(p, ts, te, current_events);
 
         now = te;
 
-        // add newly arrived processes before requeueing
         while (index < n && processes[index].arrival <= now) {
             push(q, &processes[index]);
             index++;
         }
 
-        // p not finished
         if (p->rem_time > 0) {
             push(q, p);
         }
