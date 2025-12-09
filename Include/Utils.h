@@ -1,13 +1,12 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-// event type
+
 typedef struct {
-    int t;  // after t seconds of execution, the process will print a comment
+    int t; 
     char comment[250];
 } event;
 
-// process type
 typedef struct{
     int pid;
     int ppid;
@@ -21,7 +20,7 @@ typedef struct{
     event* events;
 } process;
 
-// execute type
+
 typedef struct {
     process* p;
     int ts;

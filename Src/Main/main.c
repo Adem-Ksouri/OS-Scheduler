@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     }
     
     printf("Enter your choice here: \n");
-    scanf("%49s", choice);
+    fgets(choice, 50, stdin);
 
     execute* result;
     int out_cnt = 0;
@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
         printf("\n");
         result = multilevel_scheduler(processes, nbProc, nbPriority, &out_cnt, cpu_usage_limit);
     }else {
+        choice = "Fifo";
         result = fifo_scheduler(processes, nbProc, &out_cnt);
     }
 
