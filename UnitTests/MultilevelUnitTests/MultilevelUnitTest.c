@@ -5,7 +5,7 @@
 #include "../../Include/Scheduler.h"
 
 int main() {
-    freopen("UnitTests/TestsOutput/MultilevelUnitTest.txt", "w", stdout);
+    freopen("TestsOutput/MultilevelUnitTest.txt", "w", stdout);
 
     process* input = getProcessesForTest();
 

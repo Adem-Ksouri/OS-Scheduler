@@ -17,7 +17,7 @@ number of events is 2 :
 0 output after 0 units
 2 output after 2 units
 
-P1 10 19
+P1 10 13
 number of events is 1 :
 2 output after 2 units
 

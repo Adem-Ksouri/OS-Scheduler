@@ -35,7 +35,7 @@ process* getProcessesForTest(){
     // input[2] = *p3;
     // input[3] = *p4;
     //test2
-    process* p1 = getProcessForTest(1, 0, "P1", 0, 10, 0, 2, e);
+    process* p1 = getProcessForTest(1, 0, "P1", 0, 4, 0, 2, e);
     process* p2 = getProcessForTest(2, 0, "P2", 1, 3, 3, 2, e);
     process* p3 = getProcessForTest(3, 0, "P3", 2, 3, 3, 2, e);
     process* p4 = getProcessForTest(4, 0, "P4", 3, 3, 3, 2, e);
