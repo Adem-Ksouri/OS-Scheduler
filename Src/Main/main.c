@@ -10,10 +10,16 @@
 #include "../../Include/SchedulersGetter.h"
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
+    if (argc != 2) {
         fprintf(stderr, "too less or much arguments than expected\n");
         return 1;
     }
+
+    char cwd[100];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        perror("getcwd");
+    } 
+    char* schedulersFolder = strcat(cwd, "/Schedulers");
 
     FILE *f = fopen(argv[1], "r");
 
@@ -24,7 +30,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char* algo = GetSchedulers(argv[2]);
+    char* algo = GetSchedulers(schedulersFolder);
     printf("Please choose an algorithm :)\n");
     printf("%s", algo);
     printf("\n");
