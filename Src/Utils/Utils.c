@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include "../../Include/Scheduler.h"
 
 int compare_process(const void* a, const void* b) {
@@ -19,14 +18,6 @@ int compare_event(const void* a, const void* b) {
 }
 
 event* getEvents(process p, int tl, int tr, int* out_count) {
-    if (out_count == NULL) return NULL;
-    
-    *out_count = 0;
-    
-    if (p.events == NULL || p.nbEvents <= 0) {
-        return NULL;
-    }
-    
     int st = 0;
     while (st < p.nbEvents && p.events[st].t < tl) {
         st++;
@@ -39,14 +30,7 @@ event* getEvents(process p, int tl, int tr, int* out_count) {
         if (p.events[st].t >= tr)
             break;
 
-        event* temp = (event*)realloc(result, (count + 1) * sizeof(event));
-        if (temp == NULL) {
-            // Allocation failed, free what we have and return
-            free(result);
-            *out_count = 0;
-            return NULL;
-        }
-        result = temp;
+        result = realloc(result, (count + 1) * sizeof(event));
         result[count] = p.events[st];
         count++;
         st++;
