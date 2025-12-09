@@ -1,65 +1,62 @@
-# Simple Makefile for UnitTests
-
 CC = gcc
 CFLAGS = -Wall -Wextra -g -I .. -I .
 
-# Absolute path to TestFiles directory
-TEST_FILES_PATH := $(shell pwd)/
+OUT_DIR = Executables
+OBJ_DIR = build
 
-# All .c files in the current directory (unit test + helper)
-FifoUnitTest := FifoUnitTests/FifoUnitTest.c TestHelpers/Helpers.c
-AddHeadUnitTest := ListUnitTests/AddHeadUnitTest.c TestHelpers/Helpers.c
-CreateListUnitTest := ListUnitTests/CreateListUnitTest.c TestHelpers/Helpers.c
-MultilevelUnitTest := MultilevelUnitTests/MultilevelUnitTest.c TestHelpers/Helpers.c
-ParserUnitTest := ParserUnitTests/ParserUnitTest.c TestHelpers/Helpers.c
-PreemptivePriorityUnitTest := PreemptivePriorityUnitTests/PreemptivePriorityUnitTest.c TestHelpers/Helpers.c
-QueueUnitTest := QueueTests/QueueUnitTest.c TestHelpers/Helpers.c
-RoundRobinUnitTest := RoundRobinUnitTests/RoundRobinUnitTest.c TestHelpers/Helpers.c
-SchedulerGetterUnitTest := SchedulerGetterUnitTests/SchedulerGetterUnitTest.c TestHelpers/Helpers.c
+# All unit test source files (with relative path)
+TEST_SRCS := $(shell find . -name '*UnitTest.c')
 
+# Flattened executable names
+TEST_NAMES := $(notdir $(TEST_SRCS:.c=))
+TEST_BINS := $(addprefix $(OUT_DIR)/, $(TEST_NAMES))
 
-# Output executable
-OUT_EXE := all.exe
+# Helpers
+HELPER_SRCS := $(shell find . -name 'Helpers.c')
+HELPER_OBJS := $(patsubst ./%, $(OBJ_DIR)/%, $(HELPER_SRCS:.c=.o))
 
-# Default target: build src library and compile all unit tests
-all: ../Src/libcore.a
+# Map each test executable to its source and object
+define MAKE_TEST_RULES
+$$(OUT_DIR)/$(notdir $(1:.c=)): $(OBJ_DIR)/$(1:.c=.o) $(HELPER_OBJS) ../Src/libcore.a
+	$$(CC) $$(CFLAGS) -o $$@ $$^
+$$(OBJ_DIR)/$(1:.c=.o): $(1) | $(OBJ_DIR)
+	@mkdir -p $$(dir $$@)
+	$$(CC) $$(CFLAGS) -c $$< -o $$@
+endef
+
+# Generate rules for all tests
+$(foreach src,$(TEST_SRCS),$(eval $(call MAKE_TEST_RULES,$(src))))
+
+# Default target
+all: ../Src/libcore.a $(HELPER_OBJS) $(OUT_DIR) $(TEST_BINS)
 
 # Build src library first
 ../Src/libcore.a:
 	$(MAKE) -C ../Src
 
-# Compile all .c files in one command
-$(OUT_EXE): ../Src/libcore.a $(TEST_SRCS)
-	$(CC) $(CFLAGS) FifoUnitTest ../Src/libcore.a \
-		-o $(OUT_EXE) \
-		-DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
+# Ensure folders exist
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
 
-# Run the tests
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+# Compile helpers
+$(OBJ_DIR)/%.o: ./%.c | $(OBJ_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Run all tests
 run: all
-	mkdir -p Executables
-	@echo "Running unit tests..."
-	$(CC) $(CFLAGS) $(FifoUnitTest) ../Src/libcore.a -o Executables/FifoUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(AddHeadUnitTest) ../Src/libcore.a -o Executables/AddHeadUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(CreateListUnitTest) ../Src/libcore.a -o Executables/CreateListUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(MultilevelUnitTest) ../Src/libcore.a -o Executables/MultilevelUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(ParserUnitTest) ../Src/libcore.a -o Executables/ParserUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(PreemptivePriorityUnitTest) ../Src/libcore.a -o Executables/PreemptivePriorityUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(QueueUnitTest) ../Src/libcore.a -o Executables/QueueUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(RoundRobinUnitTest) ../Src/libcore.a -o Executables/RoundRobinUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	$(CC) $(CFLAGS) $(SchedulerGetterUnitTest) ../Src/libcore.a -o Executables/SchedulerGetterUnitTest -DTEST_FILES_PATH=\"$(TEST_FILES_PATH)\"
-	./Executables/FifoUnitTest
-	./Executables/AddHeadUnitTest
-	./Executables/CreateListUnitTest
-	./Executables/MultilevelUnitTest
-	./Executables/ParserUnitTest
-	./Executables/PreemptivePriorityUnitTest
-	./Executables/QueueUnitTest
-	./Executables/RoundRobinUnitTest
-	./Executables/SchedulerGetterUnitTest
-	@echo "All tests passed successfully !"
+	@echo "Running all unit tests..."
+	@for exe in $(TEST_BINS); do \
+		echo "=== Running $$exe ==="; \
+		$$exe || exit 1; \
+	done
+	@echo "All tests completed successfully."
 
-# Clean generated files
+# Clean
 clean:
-	rm -r Executables
+	rm -rf $(OBJ_DIR) $(TEST_BINS)
 
-.PHONY: all run clean
+.PHONY: all clean run
