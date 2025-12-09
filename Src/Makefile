@@ -1,28 +1,40 @@
+# Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -g -I .
+CFLAGS = -Wall -Wextra -g -I.
 
-# Find all .c files
-SRCS := $(shell find . -name '*.c')
+# Config file path (command-line argument)
+CONF := $(shell pwd)/../UnitTests/TestFiles/config.txt
 
-# Put all .o files inside build/
+# Source files
+SRCDIR := .
+SRCS := $(shell find $(SRCDIR) -name '*.c' ! -name 'main.c')
+
+# Object files (inside build folder)
 OBJDIR := build
 OBJS := $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 
-TARGET = libcore.a
+# Target executable
+TARGET := main
 
+# Default target
 all: $(TARGET)
 
-# Archive target
-$(TARGET): $(OBJS)
-	ar rcs $@ $^
-
-# Rule for building object files inside build/
-# Uses mkdir -p to ensure the directory exists
+# Rule to build object files
 $(OBJDIR)/%.o: %.c
-	mkdir -p $(dir $@)
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Link object files and main.c into executable
+$(TARGET): $(OBJS) Main/main.c
+	$(CC) $(CFLAGS) Main/main.c $(OBJS) -o $@
+
+# Run the program with the config file
+run: $(TARGET)
+	@echo "Running $(TARGET) with $(CONF):"
+	./$(TARGET) $(CONF)
+
+# Clean build files
 clean:
 	rm -rf $(OBJDIR) $(TARGET)
 
-.PHONY: all clean
+.PHONY: all run clean

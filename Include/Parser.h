@@ -3,6 +3,6 @@
 
 #include "Utils.h"
 
-int parser(const char *filename, process tab[], int *nbProc);
+int parser(FILE *f, process tab[], int *nbProc);
 
 #endif

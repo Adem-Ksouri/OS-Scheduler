@@ -32,6 +32,7 @@ int compare_event(const void* a, const void* b);
 event* getEvents(process p, int tl, int tr, int *out_cnt);
 int compare_process(const void* a, const void* b);
 int compare_by_priority(const void*a, const void* b);
-execute make_execute(process* p, int tl, int tr, event* events);
+execute* make_execute(process* p, int tl, int tr, event* events);
+process* make_process(process* p);
 
 #endif

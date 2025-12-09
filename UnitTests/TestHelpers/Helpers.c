@@ -61,7 +61,6 @@ process* getDefaultProcessForTest(int pid){
 }
 
 process* getProcessForTest(int pid, int ppid, char* name, int arrival, int exec_time, int priority, int nbEvents, event* events){
-    event* e = getEventsForTest();
     process* ret = (process*)malloc(sizeof(process));
     ret->pid = pid;
     ret->ppid = ppid;

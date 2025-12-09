@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "../../Include/Scheduler.h"
 
 int compare_process(const void* a, const void* b) {
@@ -40,11 +41,25 @@ event* getEvents(process p, int tl, int tr, int* out_count) {
     return result;
 }
 
-execute make_execute(process* p, int ts, int te, event* events) {
-    execute exc;
-    exc.p = p;
-    exc.ts = ts;
-    exc.te = te;
-    exc.events = events;
+execute* make_execute(process* p, int ts, int te, event* events) {
+    execute* exc = (execute*)malloc(sizeof(execute));
+    exc->p = p;
+    exc->ts = ts;
+    exc->te = te;
+    exc->events = events;
     return exc;
+}
+
+process* make_process(process* p){
+    process* ret = (process*)malloc(sizeof(process));
+    ret->pid = p->pid;
+    ret->ppid = p->ppid;
+    ret->arrival = p->arrival;
+    ret->exec_time = p->exec_time;
+    ret->priority = p->priority;
+    strcpy(ret->name, p->name);
+    ret->events = p->events;
+    ret->rem_time = p->rem_time;
+    ret->nbEvents = p->nbEvents;
+    return ret;
 }

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../Include/Scheduler.h"
-#include "../Include/Queue.h"
+#include "../../Include/Scheduler.h"
+#include "../../Include/Queue.h"
 
 execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
     qsort(processes, n, sizeof(process), compare_process);
@@ -50,8 +50,8 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
             capacity *= 2;
             result = realloc(result, sizeof(execute) * capacity);
         }
+        result[count] = *make_execute(p, ts, te, current_events);
         count++;
-        result[count] = make_execute(p, ts, te, current_events);
 
         now = te;
 

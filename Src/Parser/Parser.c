@@ -2,25 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "../Include/Utils.h"
+#include "../../Include/Utils.h"
 #define MAX_PROC 100
 #define MAX_LINE 256
 
 
-int parser(const char *filename, process tab[], int *nbProc) {
- FILE *f = fopen(filename, "r");
-    if (!f) {
-        perror("File opening error");
-        return -1;
-    }
-
+int parser(FILE *f, process* tab, int *nbProc) {
     char line[256];
 
     while (fgets(line, sizeof(line), f)) {
 
         if (*nbProc >= MAX_PROC) {
             fprintf(stderr, "Maximum number of processes reached\n");
-            break;
             return -1;
         }
 
@@ -53,6 +46,5 @@ int parser(const char *filename, process tab[], int *nbProc) {
         }
     }
 
-    fclose(f);
     return 0;
 }
