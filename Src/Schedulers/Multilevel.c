@@ -11,7 +11,6 @@
 void add_to_queue(queue* q, process* p){
     if (q == NULL || p == NULL) return;
     
-    // If queue is empty, just push
     if (size(*q) == 0) {
         *q = push(*q, p);
         return;
@@ -59,7 +58,6 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
         int exec_time = min(nxtTime - *currTime, curr->rem_time);
         if (exec_time <= 0) break;
 
-        // Calculate the offset within the process execution
         int offset = curr->exec_time - curr->rem_time;
         
         int evt_cnt = 0;
@@ -77,17 +75,15 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
         exec->event_count = evt_cnt;
         exec->events = ev_list;
 
-        // Check if we can merge with the last execution
+        
         node* lst = result->tail;
         bool merged = false;
         
         if (lst != NULL && lst->data != NULL) {
             execute* last_exec = (execute*)lst->data;
             if (last_exec->p != NULL && last_exec->p->pid == exec->p->pid && last_exec->te == exec->ts){
-                // Merge: extend the end time
+              
                 last_exec->te = exec->te;
-                
-                // Append events if any
                 if (evt_cnt > 0 && ev_list != NULL) {
                     int new_total = last_exec->event_count + evt_cnt;
                     event* new_events = (event*)realloc(last_exec->events, new_total * sizeof(event));
@@ -107,25 +103,25 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
         
         if (!merged) {
             add_tail(result, exec);
+            curr->cpu_usage++;
         }
 
-        curr->cpu_usage++;
+      
         curr->rem_time -= exec_time;
 
-        // Check if process should be demoted or removed
+       
         if (curr->rem_time > 0){
             if (curr->cpu_usage >= cpu_usage_limit && priority > 0){
                 queues[priority] = pop(queues[priority]);
                 add_to_queue(&queues[priority - 1], curr);
                 curr->cpu_usage = 0;
             }
-            // else process stays in current queue
+           
         }
         else{
-            // Process completed
+           
             queues[priority] = pop(queues[priority]);
         }
-
         *currTime += exec_time;
     }
 }
@@ -157,20 +153,20 @@ execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *ou
     int currTime = 0;
     for (int i = 0; i < n; i++){
         int j = i;
-        // Add all processes that arrive at currTime
+        
         while (j < n && processes[j].arrival == currTime){
-            // Validate priority is within bounds
+         
             if (processes[j].priority >= 0 && processes[j].priority < nbPriority) {
                 add_to_queue(&queues[processes[j].priority], &processes[j]);
             }
             j++;
         }
         
-        // Execute processes until the next arrival or all queues are empty
+        
         int nxtTime = (j < n) ? processes[j].arrival : 1000000000;
         execute_processes(queues, nbPriority, &currTime, nxtTime, result, cpu_usage_limit);
 
-        // Move time forward if needed
+       
         if (j < n && currTime < processes[j].arrival) {
             currTime = processes[j].arrival;
         }
@@ -178,7 +174,7 @@ execute* multilevel_scheduler(process* processes, int n, int nbPriority, int *ou
         i = j - 1;
     }
     
-    // Execute any remaining processes in queues
+    
     execute_processes(queues, nbPriority, &currTime, 1000000000, result, cpu_usage_limit);
 
     *out_cnt = getsz(result);

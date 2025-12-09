@@ -5,7 +5,7 @@
 #include <sys/types.h>
 
 char* GetSchedulers() {
-    const char *folder = "/home/adem/Desktop/Github/OS-Scheduler/Src/Schedulers"; 
+    const char *folder = "/home/aychouch/Documents/OS-Scheduler/Src/Schedulers"; 
     DIR *d = opendir(folder);
     if (d == NULL) {
         printf("Unable to open directory\n");
