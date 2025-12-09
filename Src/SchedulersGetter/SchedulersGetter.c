@@ -1,0 +1,37 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/types.h>
+
+char* GetSchedulers(char* folderPath) {
+    // const char *folder = "/home/adem/Desktop/Github/OS-Scheduler/Src/Schedulers"; 
+    printf("%s\n", folderPath);
+    DIR *d = opendir(folderPath);
+    if (d == NULL) {
+        printf("Unable to open directory\n");
+        return NULL;
+    }
+
+    struct dirent *dir;
+    size_t totalLen = 1;
+    char* result = malloc(totalLen);
+    result[0] = '\0'; 
+
+    while ((dir = readdir(d)) != NULL) {
+        if (dir->d_name[0] == '.' && 
+            (dir->d_name[1] == '\0' || 
+             (dir->d_name[1] == '.' && dir->d_name[2] == '\0'))) {
+            continue;
+        }
+
+        size_t nameLen = strlen(dir->d_name) - 2;
+        totalLen += nameLen + 1; 
+        result = realloc(result, totalLen);
+        strncat(result, dir->d_name, nameLen);
+        strcat(result, "\n");
+    }
+
+    closedir(d);
+    return result;
+}
