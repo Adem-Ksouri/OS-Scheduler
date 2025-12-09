@@ -27,7 +27,7 @@ event* getEvents(process p, int tl, int tr, int* out_count) {
     int count = 0;
 
     while (st < p.nbEvents) {
-        if (p.events[st].t > tr)
+        if (p.events[st].t >= tr)
             break;
 
         result = realloc(result, (count + 1) * sizeof(event));
@@ -40,11 +40,12 @@ event* getEvents(process p, int tl, int tr, int* out_count) {
     return result;
 }
 
-execute make_execute(process* p, int ts, int te, event* events) {
+execute make_execute(process* p, int ts, int te, int event_count, event* events) {
     execute exc;
     exc.p = p;
     exc.ts = ts;
     exc.te = te;
+    exc.event_count = event_count;
     exc.events = events;
     return exc;
 }
