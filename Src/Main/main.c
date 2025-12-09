@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <unistd.h>
 #include "../../Include/Utils.h"
 #include "../../Include/Parser.h"
 #include "../../Include/Scheduler.h"
@@ -26,12 +27,14 @@ int main(int argc, char *argv[]) {
     char* algo = GetSchedulers();
     printf("Please choose an algorithm :)\n");
     printf("%s", algo);
-
+    printf("\n");
     char* choice = malloc(50 * sizeof(char));
     if (!choice) {
         perror("malloc failed");
         exit(1);
     }
+    
+    printf("Enter your choice here: \n");
     scanf("%49s", choice);
 
     execute* result;
@@ -60,9 +63,14 @@ int main(int argc, char *argv[]) {
         result = fifo_scheduler(processes, nbProc, &out_cnt);
     }
 
-    printf("%d\n", out_cnt);
-    for (int i = 0; i < out_cnt; i++)
+    printf("\n");
+    printf("Running %s algorithm :\n", choice);
+
+    printf("Result:\n");
+    for (int i = 0; i < out_cnt; i++){
         printf("Process: %s | From: %d To: %d \n", result[i].p->name, result[i].ts, result[i].te);
+        sleep(1);
+    }
     
     free(choice);
     return 0;
