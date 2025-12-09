@@ -1,5 +1,6 @@
 #include "Utils.h"
 
+event getEventForTest(int t, char* comment);
 event* getEventsForTest();
 process* getProcessesForTest();
 process* getDefaultProcessForTest(int pid);
