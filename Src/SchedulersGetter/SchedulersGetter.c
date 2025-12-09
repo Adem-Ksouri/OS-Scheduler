@@ -24,10 +24,10 @@ char* GetSchedulers() {
             continue;
         }
 
-        size_t nameLen = strlen(dir->d_name);
+        size_t nameLen = strlen(dir->d_name) - 2;
         totalLen += nameLen + 1; 
         result = realloc(result, totalLen);
-        strcat(result, dir->d_name);
+        strncat(result, dir->d_name, nameLen);
         strcat(result, "\n");
     }
 

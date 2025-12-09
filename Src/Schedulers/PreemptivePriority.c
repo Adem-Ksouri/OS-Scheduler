@@ -32,7 +32,7 @@ execute* pp_scheduler(process* processes, int n, int *out_cnt) {
             result = realloc(result, sz*sizeof(execute));
             int ts=currTime , te=ts + processes[idx].exec_time;
             currTime = te;
-            result[sz-1] = *make_execute(&processes[idx],ts,te,processes[idx].events);
+            result[sz-1] = *make_execute(&processes[idx],ts,te, processes[idx].nbEvents, processes[idx].events);
             currIdx = idx;
         }
 
@@ -43,7 +43,7 @@ execute* pp_scheduler(process* processes, int n, int *out_cnt) {
             currTime = te;
             sz++;
             result = realloc(result,sz*sizeof(execute));
-            result[sz-1] = *make_execute(&processes[idx],ts,te,processes[idx].events);
+            result[sz-1] = *make_execute(&processes[idx],ts,te,processes[idx].nbEvents,processes[idx].events);
             currIdx = idx;
         }
         else{
