@@ -42,16 +42,16 @@ int main(int argc, char *argv[]) {
     int quantum = 2;
     int cpu_usage_limit = 3;
     int nbPriority = 20;
-    if (strcmp(choice, "Fifo") == 0){
+    if (strcmp(choice, "Fifo\n") == 0){
         result = fifo_scheduler(processes, nbProc, &out_cnt);
-    }else if (strcmp(choice, "RoundRobin") == 0){
+    }else if (strcmp(choice, "RoundRobin\n") == 0){
         printf("Enter the quantum value: ");
         scanf("%d", &quantum);
         printf("\n");
         result = rr_scheduler(processes, nbProc, quantum, &out_cnt);
-    }else if (strcmp(choice, "PreemptivePriority") == 0){
+    }else if (strcmp(choice, "PreemptivePriority\n") == 0){
         result = pp_scheduler(processes, nbProc, &out_cnt);
-    }else if (strcmp(choice, "Multilevel") == 0) {
+    }else if (strcmp(choice, "Multilevel\n") == 0) {
         printf("Enter the number of levels: ");
         scanf("%d", &nbPriority);
         printf("\n");
@@ -70,6 +70,10 @@ int main(int argc, char *argv[]) {
     printf("Result:\n");
     for (int i = 0; i < out_cnt; i++){
         printf("Process: %s | From: %d To: %d \n", result[i].p->name, result[i].ts, result[i].te);
+        printf("number of events is %d :\n", result[i].event_count);
+        for (int j = 0; j < result[i].event_count; j++)
+            printf("%d %s\n",result[i].events[j].t, result[i].events[j].comment);
+        printf("\n");
         sleep(1);
     }
     
