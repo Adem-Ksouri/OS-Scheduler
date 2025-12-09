@@ -4,6 +4,7 @@ CFLAGS = -Wall -Wextra -g -I.
 
 # Config file path (command-line argument)
 CONF := $(shell pwd)/../UnitTests/TestFiles/config.txt
+SCHEDULERS_FOLDER := $(shell pwd)/../Src/Schedulers/
 
 # Source files
 SRCDIR := .
@@ -31,7 +32,7 @@ $(TARGET): $(OBJS) Main/main.c
 # Run the program with the config file
 run: $(TARGET)
 	@echo "Running $(TARGET) with $(CONF):"
-	./$(TARGET) $(CONF)
+	./$(TARGET) $(CONF) $(SCHEDULERS_FOLDER)
 
 # Clean build files
 clean:
