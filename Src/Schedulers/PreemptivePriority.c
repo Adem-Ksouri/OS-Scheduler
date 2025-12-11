@@ -9,7 +9,7 @@ execute* pp_scheduler(process* processes, int n, int *out_cnt) {
     execute* result = NULL;
     bool ok[n];
     memset(ok,false,sizeof(ok));
-    int currTime = 0,currIdx = -1,completed = 0,sz=0;
+    int currTime = processes[0].arrival,currIdx = -1,completed = 0,sz=0;
     while(completed<n){
         int idx=-1,mxPriority = -__INT_MAX__;
         for(int i=0;i<n;i++){

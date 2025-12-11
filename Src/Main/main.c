@@ -48,16 +48,16 @@ int main(int argc, char *argv[]) {
     int quantum = 2;
     int cpu_usage_limit = 3;
     int nbPriority = 20;
-    if (strcmp(choice, "Fifo") == 0){
+    if (strcmp(choice, "Fifo") == 0 || strcmp(choice, "1") == 0){
         result = fifo_scheduler(processes, nbProc, &out_cnt);
-    }else if (strcmp(choice, "RoundRobin") == 0){
+    }else if (strcmp(choice, "RoundRobin") == 0 || strcmp(choice, "4") == 0){
         printf("Enter the quantum value: ");
         scanf("%d", &quantum);
         printf("\n");
         result = rr_scheduler(processes, nbProc, quantum, &out_cnt);
-    }else if (strcmp(choice, "PreemptivePriority") == 0){
+    }else if (strcmp(choice, "PreemptivePriority") == 0 || strcmp(choice, "2") == 0){
         result = pp_scheduler(processes, nbProc, &out_cnt);
-    }else if (strcmp(choice, "Multilevel") == 0) {
+    }else if (strcmp(choice, "Multilevel") == 0 || strcmp(choice, "3") == 0) {
         printf("Enter the number of levels: ");
         scanf("%d", &nbPriority);
         printf("\n");
