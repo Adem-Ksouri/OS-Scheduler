@@ -1,5 +1,25 @@
 P1 0 1
+number of events is 2 :
+0 output after 0 units
+2 output after 2 units
+
 P2 1 4
+number of events is 2 :
+0 output after 0 units
+2 output after 2 units
+
 P3 4 7
+number of events is 2 :
+0 output after 0 units
+2 output after 2 units
+
 P4 7 10
+number of events is 2 :
+0 output after 0 units
+2 output after 2 units
+
 P1 10 19
+number of events is 2 :
+0 output after 0 units
+2 output after 2 units
+

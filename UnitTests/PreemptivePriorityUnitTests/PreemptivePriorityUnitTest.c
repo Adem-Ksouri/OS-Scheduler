@@ -14,6 +14,10 @@ int main() {
 
     for (int i = 0; i < out_count; i++) {
         printf("%s %d %d\n", output[i].p->name, output[i].ts, output[i].te);
+        printf("number of events is %d :\n", output[i].event_count);
+        for (int j = 0; j < output[i].event_count; j++)
+            printf("%d %s\n",output[i].events[j].t, output[i].events[j].comment);
+        printf("\n");
     }
 
     return 0;
