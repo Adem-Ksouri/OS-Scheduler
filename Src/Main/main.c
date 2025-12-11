@@ -14,22 +14,18 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "too less or much arguments than expected\n");
         return 1;
     }
-
     char cwd[100];
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         perror("getcwd");
     } 
     char* schedulersFolder = strcat(cwd, "/Schedulers");
-
     FILE *f = fopen(argv[1], "r");
-
     process* processes = (process*)malloc(sizeof(process) * 100);
     int nbProc = 0;
     if (parser(f, processes, &nbProc) != 0) {
         fprintf(stderr, "Failed to load processes from config file\n");
         return 1;
     }
-
     char* algo = GetSchedulers(schedulersFolder);
     printf("Please choose an algorithm :)\n");
     printf("%s", algo);
@@ -42,22 +38,37 @@ int main(int argc, char *argv[]) {
     
     printf("Enter your choice here: \n");
     fgets(choice, 50, stdin);
-
+    
+  
+    choice[strcspn(choice, "\n")] = '\0';
+    
+    // Trim spaces
+    char* end = choice + strlen(choice) - 1;
+    while (end > choice && isspace((unsigned char)*end)) {
+        *end = '\0';
+        end--;
+    }
+    
     execute* result;
     int out_cnt = 0;
     int quantum = 2;
     int cpu_usage_limit = 3;
     int nbPriority = 20;
-    if (strcmp(choice, "Fifo\n") == 0){
+    
+    char* algo_name;
+    if (strcmp(choice, "Fifo") == 0){
         result = fifo_scheduler(processes, nbProc, &out_cnt);
-    }else if (strcmp(choice, "RoundRobin\n") == 0){
+        algo_name = choice;
+    }else if (strcmp(choice, "RoundRobin") == 0){
         printf("Enter the quantum value: ");
         scanf("%d", &quantum);
         printf("\n");
         result = rr_scheduler(processes, nbProc, quantum, &out_cnt);
-    }else if (strcmp(choice, "PreemptivePriority\n") == 0){
+        algo_name = choice;
+    }else if (strcmp(choice, "PreemptivePriority") == 0){
         result = pp_scheduler(processes, nbProc, &out_cnt);
-    }else if (strcmp(choice, "Multilevel\n") == 0) {
+        algo_name = choice;
+    }else if (strcmp(choice, "Multilevel") == 0) {
         printf("Enter the number of levels: ");
         scanf("%d", &nbPriority);
         printf("\n");
@@ -65,14 +76,14 @@ int main(int argc, char *argv[]) {
         scanf("%d", &cpu_usage_limit);
         printf("\n");
         result = multilevel_scheduler(processes, nbProc, nbPriority, &out_cnt, cpu_usage_limit);
+        algo_name = choice;
     }else {
-        choice = "Fifo";
+        strcpy(choice, "Fifo");
+        algo_name = choice;
         result = fifo_scheduler(processes, nbProc, &out_cnt);
     }
-
     printf("\n");
-    printf("Running %s algorithm :\n", choice);
-
+    printf("Running %s algorithm :\n", algo_name);
     printf("Result:\n");
     for (int i = 0; i < out_cnt; i++){
         printf("Process: %s | From: %d To: %d \n", result[i].p->name, result[i].ts, result[i].te);

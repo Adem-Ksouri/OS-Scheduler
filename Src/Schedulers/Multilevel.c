@@ -64,6 +64,11 @@ void execute_processes(queue* queues, int nbPriority, int* currTime, int nxtTime
         int evt_cnt = 0;
         event* ev_list = getEvents(*curr, offset, offset + exec_time, &evt_cnt);
 
+        // Convert relative event times to absolute wall-clock times
+        for (int i = 0; i < evt_cnt; i++) {
+            ev_list[i].t = *currTime + (ev_list[i].t - offset);
+        }
+
         execute* exec = (execute*)malloc(sizeof(execute));
         if (exec == NULL) {
             if (ev_list != NULL) free(ev_list);

@@ -6,52 +6,68 @@
 
 execute* pp_scheduler(process* processes, int n, int *out_cnt) {
     qsort(processes, n, sizeof(process), compare_process); 
+    
+    int currTime = 0;
+    int completed = 0;
+    int sz = 0;
     execute* result = NULL;
-    bool ok[n];
-    memset(ok,false,sizeof(ok));
-    int currTime = 0,currIdx = -1,completed = 0,sz=0;
-    while(completed<n){
-        int idx=-1,mxPriority = -__INT_MAX__;
-        for(int i=0;i<n;i++){
-            if(!ok[i] && processes[i].arrival < currTime && processes[i].priority>mxPriority){
-                idx=i;
+    
+    while(completed < n) {
+        int idx = -1;
+        int mxPriority = -__INT_MAX__;
+        
+        for(int i = 0; i < n; i++) {
+            if(processes[i].rem_time > 0 && processes[i].arrival <= currTime && processes[i].priority > mxPriority) {
+                idx = i;
                 mxPriority = processes[i].priority;
             }
         }
         
-        if(idx == -1){
-            for(int i=0;i<n;i++){
-                if(!ok[i]){
-                    idx = i;
+        if(idx == -1) {
+            for(int i = 0; i < n; i++) {
+                if(processes[i].rem_time > 0) {
+                    currTime = processes[i].arrival;
                     break;
                 }
             }
+            continue;
         }
-        if(currIdx == -1){
-            sz++;
-            result = realloc(result, sz*sizeof(execute));
-            int ts=currTime , te=ts + processes[idx].exec_time;
-            currTime = te;
-            result[sz-1] = *make_execute(&processes[idx],ts,te, processes[idx].nbEvents, processes[idx].events);
-            currIdx = idx;
+        
+        int run_time = processes[idx].rem_time;
+        int next_preemption = currTime + run_time;
+        
+        for(int i = 0; i < n; i++) {
+            if(processes[i].rem_time > 0 && 
+               processes[i].arrival > currTime && 
+               processes[i].arrival < next_preemption &&
+               processes[i].priority > mxPriority) {
+                next_preemption = processes[i].arrival;
+                run_time = next_preemption - currTime;
+            }
         }
-
-        else if(processes[currIdx].priority < mxPriority){
-            result[sz-1].te = processes[idx].arrival;
-            processes[currIdx].exec_time -= processes[currIdx].exec_time - (currTime -processes[idx].arrival);
-            int ts=processes[idx].arrival , te=processes[idx].arrival + processes[idx].exec_time;
-            currTime = te;
-            sz++;
-            result = realloc(result,sz*sizeof(execute));
-            result[sz-1] = *make_execute(&processes[idx],ts,te,processes[idx].nbEvents,processes[idx].events);
-            currIdx = idx;
+        int ts = currTime;
+        int te = currTime + run_time;
+        int offset = processes[idx].exec_time - processes[idx].rem_time;
+        int cnte;
+        event* current_events = getEvents(processes[idx], offset, offset + run_time, &cnte);
+        
+        for (int i = 0; i < cnte; i++) {
+            current_events[i].t = ts + (current_events[i].t - offset);
         }
-        else{
-            ok[currIdx] = true;
+        
+        sz++;
+        result = realloc(result, sz * sizeof(execute));
+        result[sz-1] = *make_execute(&processes[idx], ts, te, cnte, current_events);
+        
+     
+        processes[idx].rem_time -= run_time;
+        currTime = te;
+        
+        if(processes[idx].rem_time == 0) {
             completed++;
-            currIdx = -1;
         }
     }
-    *(out_cnt) = sz;
-    return result ;
+    
+    *out_cnt = sz;
+    return result;
 }
