@@ -1,12 +1,20 @@
 P1 0 10
-number of events is 0 :
+number of events is 2 :
+0 output after 0 units
+2 output after 2 units
 
 P2 10 13
-number of events is 0 :
+number of events is 2 :
+10 output after 0 units
+12 output after 2 units
 
 P3 13 16
-number of events is 0 :
+number of events is 2 :
+13 output after 0 units
+15 output after 2 units
 
 P4 16 19
-number of events is 0 :
+number of events is 2 :
+16 output after 0 units
+18 output after 2 units
 
