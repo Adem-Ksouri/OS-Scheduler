@@ -9,7 +9,9 @@ interface SetupPanelProps {
   onStartSimulation: (
     processes: Process[],
     algorithmId: string,
-    quantum: number
+    quantum: number,
+    priorityLevels: number,
+    cpuUsageLimit: number
   ) => void;
 }
 
@@ -79,7 +81,8 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('FCFS');
   const [quantum, setQuantum] = useState(4);
   const [isLoadingAlgorithms, setIsLoadingAlgorithms] = useState(true);
-
+  const [priorityLevels, setPriorityLevels] = useState(3);
+  const [cpuUsageLimit, setCpuUsageLimit] = useState(2);
   useEffect(() => {
     const fetchAlgorithms = async () => {
       setIsLoadingAlgorithms(true);
@@ -97,18 +100,17 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
     const newProcesses = generateRandomProcesses();
     setProcesses(newProcesses);
   };
-
-  const handleStart = () => {
-    if (processes.length === 0) {
-      alert('Please add at least one process');
-      return;
-    }
-    if (!selectedAlgorithm) {
-      alert('Please select an algorithm');
-      return;
-    }
-    onStartSimulation(processes, selectedAlgorithm, quantum);
-  };
+const handleStart = () => {
+  if (processes.length === 0) {
+    alert('Please add at least one process');
+    return;
+  }
+  if (!selectedAlgorithm) {
+    alert('Please select an algorithm');
+    return;
+  }
+  onStartSimulation(processes, selectedAlgorithm, quantum, priorityLevels, cpuUsageLimit);
+};
 
   const selectedAlgoInfo = algorithms.find(a => a.id === selectedAlgorithm);
 
@@ -192,6 +194,43 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
                   />
                 </div>
               )}
+              {selectedAlgoInfo?.requiresMultilevelParams && (
+                  <>
+                    <div className="mb-6 p-4 bg-purple-100 rounded-xl border border-purple-200">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Priority Levels
+                        <span className="ml-1 text-slate-400 cursor-help" title="Number of priority queues">
+                          <Info className="w-3 h-3 inline" />
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="2"
+                        max="10"
+                        value={priorityLevels}
+                        onChange={(e) => setPriorityLevels(parseInt(e.target.value) || 3)}
+                        className="w-full px-4 py-3 bg-white border border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div className="mb-6 p-4 bg-green-100 rounded-xl border border-green-200">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        CPU Usage Limit
+                        <span className="ml-1 text-slate-400 cursor-help" title="CPU usage threshold for demotion">
+                          <Info className="w-3 h-3 inline" />
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={cpuUsageLimit}
+                        onChange={(e) => setCpuUsageLimit(parseInt(e.target.value) || 2)}
+                        className="w-full px-4 py-3 bg-white border border-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                  </>
+                )}
 
               <div className="space-y-3">
                 <button

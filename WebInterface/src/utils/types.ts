@@ -30,6 +30,7 @@ export interface AlgorithmInfo {
   id: string;
   name: string;
   requiresQuantum: boolean;
+  requiresMultilevelParams?: boolean; // ADD THIS LINE ONLY
 }
 
 export interface ProcessState extends Process {

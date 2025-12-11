@@ -7,15 +7,6 @@ const API_BASE_URL =  import.meta.env.VITE_API_SERVER_URL;
 
 const REQUEST_TIMEOUT = 10000; 
 
-
-export interface ScheduleRequest {
-  processes: Process[];
-  algorithm: string;
-  quantum?: number;
-}
-
-
-
 export interface ScheduleResponse {
   executes: Execute[];
   totalTime: number;
@@ -23,11 +14,20 @@ export interface ScheduleResponse {
   error?: string;
 }
 
+export interface ScheduleRequest {
+  processes: Process[];
+  algorithm: string;
+  quantum?: number;
+  priority_levels?: number;      // ADD THIS
+  cpu_usage_limit?: number;      // ADD THIS
+}
 
 export async function scheduleProcesses(
   processes: Process[],
   algorithm: string,
-  quantum?: number
+  quantum?: number,
+  priorityLevels?: number,        // ADD THIS
+  cpuUsageLimit?: number          // ADD THIS
 ): Promise<Execute[]> {
   
   try {
@@ -37,9 +37,10 @@ export async function scheduleProcesses(
     const requestBody: ScheduleRequest = {
       processes,
       algorithm,
-      quantum,
+      ...(quantum !== undefined && { quantum }),
+      ...(priorityLevels !== undefined && { priority_levels: priorityLevels }),      // ADD THIS
+      ...(cpuUsageLimit !== undefined && { cpu_usage_limit: cpuUsageLimit }),        // ADD THIS
     };
-
     const response = await fetch(`${API_BASE_URL}/schedule`, {
       method: 'POST',
       headers: {

@@ -12,6 +12,8 @@ interface SimulatorInterfaceProps {
   processes: Process[];
   algorithmId: string;
   quantum: number;
+  priorityLevels: number;
+  cpuUsageLimit: number;
   onReset: () => void;
 }
 
@@ -19,6 +21,8 @@ export function SimulatorInterface({
   processes,
   algorithmId,
   quantum,
+  priorityLevels,
+  cpuUsageLimit,
   onReset,
 }: SimulatorInterfaceProps) {
   const [isRunning, setIsRunning] = useState(false);
@@ -29,6 +33,8 @@ export function SimulatorInterface({
   const [processStates, setProcessStates] = useState<ProcessState[]>([]);
   const [currentAlgorithmId, setCurrentAlgorithmId] = useState(algorithmId);
   const [currentQuantum, setCurrentQuantum] = useState(quantum);
+  const [currentPriorityLevels, setCurrentPriorityLevels] = useState(priorityLevels);
+  const [currentCpuUsageLimit, setCurrentCpuUsageLimit] = useState(cpuUsageLimit);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [algorithmName, setAlgorithmName] = useState<string>('');
@@ -66,7 +72,13 @@ export function SimulatorInterface({
       setError(null);
       
       try {
-        const result = await runScheduler(processes, currentAlgorithmId, currentQuantum);
+        const result = await runScheduler(
+          processes, 
+          currentAlgorithmId, 
+          currentQuantum,
+          currentPriorityLevels,
+          currentCpuUsageLimit
+        );
         
         if (!cancelled) {
           setExecutes(result);
@@ -95,7 +107,7 @@ export function SimulatorInterface({
     return () => {
       cancelled = true;
     };
-  }, [processes, currentAlgorithmId, currentQuantum]);
+  }, [processes, currentAlgorithmId, currentQuantum, currentPriorityLevels, currentCpuUsageLimit]);
 
   useEffect(() => {
     if (isRunning && !isPaused) {
@@ -265,6 +277,10 @@ export function SimulatorInterface({
     );
   }
 
+  const selectedAlgo = algorithms.find(a => a.id === currentAlgorithmId);
+  const requiresQuantum = selectedAlgo?.requiresQuantum || false;
+  const requiresMultilevelParams = selectedAlgo?.requiresMultilevelParams || false;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -285,7 +301,8 @@ export function SimulatorInterface({
           </div>
           <p className="text-slate-600">
             Algorithm: <span className="font-semibold text-slate-800">{algorithmName}</span>
-            {algorithms.find(a => a.id === currentAlgorithmId)?.requiresQuantum && ` (Quantum: ${currentQuantum})`}
+            {requiresQuantum && ` (Quantum: ${currentQuantum})`}
+            {requiresMultilevelParams && ` (Levels: ${currentPriorityLevels}, CPU Limit: ${currentCpuUsageLimit})`}
           </p>
         </div>
 
@@ -304,6 +321,10 @@ export function SimulatorInterface({
               currentAlgorithmId={currentAlgorithmId}
               quantum={currentQuantum}
               onQuantumChange={setCurrentQuantum}
+              priorityLevels={currentPriorityLevels}
+              cpuUsageLimit={currentCpuUsageLimit}
+              onPriorityLevelsChange={setCurrentPriorityLevels}
+              onCpuUsageLimitChange={setCurrentCpuUsageLimit}
             />
 
             <GanttChart

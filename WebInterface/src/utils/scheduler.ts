@@ -8,22 +8,26 @@ import { scheduleProcesses,getServerStatus } from './api';
 export async function runScheduler(
   processes: Process[],
   algorithmId: string,
-  quantum: number = 4
+  quantum: number = 4,
+  priorityLevels?: number,        // ADD THIS
+  cpuUsageLimit?: number          // ADD THIS
 ): Promise<Execute[]> {
-  console.log('Running scheduler with algorithm:', algorithmId);
-  console.log('Processes:', processes);
-  console.log('Quantum:', quantum);
   
   try {
-    // Try to call the API
-    const executes = await scheduleProcesses(processes, algorithmId, quantum);
+    const executes = await scheduleProcesses(
+      processes, 
+      algorithmId, 
+      quantum,
+      priorityLevels,    // ADD THIS
+      cpuUsageLimit      // ADD THIS
+    );
     return executes;
   } catch (error) {
     console.error('API call failed, using static fallback data:', error);
-    // Return static fallback data
     return getStaticFallbackData();
   }
 }
+
 
 /**
  * Static fallback data - always returns the same result
@@ -132,33 +136,14 @@ export async function getAvailableAlgorithms(): Promise<AlgorithmInfo[]> {
     return getLocalAlgorithms();
   }
 }
-
 function getLocalAlgorithms(): AlgorithmInfo[] {
   return [
-    {
-      id: 'FCFS',
-      name: 'First Come First Served',
-      requiresQuantum: false,
-    },
-    {
-      id: 'SJF',
-      name: 'Shortest Job First',
-      requiresQuantum: false,
-    },
-    {
-      id: 'Priority-Preemptive',
-      name: 'Priority (Preemptive)',
-      requiresQuantum: false,
-    },
-    {
-      id: 'Priority-Non-Preemptive',
-      name: 'Priority (Non-Preemptive)',
-      requiresQuantum: false,
-    },
-    {
-      id: 'RR',
-      name: 'Round Robin',
-      requiresQuantum: true,
-    },
+    { id: 'FCFS', name: 'First Come First Served', requiresQuantum: false },
+    { id: 'SJF', name: 'Shortest Job First', requiresQuantum: false },
+    { id: 'Priority-Preemptive', name: 'Priority (Preemptive)', requiresQuantum: false },
+    { id: 'Priority-Non-Preemptive', name: 'Priority (Non-Preemptive)', requiresQuantum: false },
+    { id: 'RR', name: 'Round Robin', requiresQuantum: true },
+    { id: 'Multilevel', name: 'Multilevel', requiresQuantum: false, requiresMultilevelParams: true }, // ADD THIS LINE
   ];
 }
+

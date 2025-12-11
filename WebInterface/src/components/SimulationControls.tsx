@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, SkipForward, RotateCcw, Gauge, Clock } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, Gauge, Clock, Layers, Cpu } from 'lucide-react';
 import { AlgorithmInfo } from '../utils/types';
 import { getAvailableAlgorithms } from '../utils/scheduler';
 
@@ -16,6 +16,10 @@ interface SimulationControlsProps {
   currentAlgorithmId: string;
   quantum?: number;
   onQuantumChange?: (quantum: number) => void;
+  priorityLevels?: number;
+  cpuUsageLimit?: number;
+  onPriorityLevelsChange?: (levels: number) => void;
+  onCpuUsageLimitChange?: (limit: number) => void;
 }
 
 export function SimulationControls({
@@ -31,6 +35,10 @@ export function SimulationControls({
   currentAlgorithmId,
   quantum,
   onQuantumChange,
+  priorityLevels,
+  cpuUsageLimit,
+  onPriorityLevelsChange,
+  onCpuUsageLimitChange,
 }: SimulationControlsProps) {
   const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
 
@@ -44,6 +52,7 @@ export function SimulationControls({
 
   const selectedAlgo = algorithms.find(a => a.id === currentAlgorithmId);
   const requiresQuantum = selectedAlgo?.requiresQuantum || false;
+  const requiresMultilevelParams = selectedAlgo?.requiresMultilevelParams || false;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 overflow-x-hidden">
@@ -88,35 +97,37 @@ export function SimulationControls({
           </button>
         </div>
 
-        <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
-          <div className="text-xs text-slate-600">Current Time</div>
-          <div className="text-sm font-mono font-semibold text-slate-800">{currentTime} units</div>
-        </div>
-
-        <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
-          <Gauge className="w-5 h-5 text-slate-600" />
-          <div className="flex flex-col">
-            <span className="text-xs text-slate-600">Speed</span>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="0.25"
-                max="4"
-                step="0.25"
-                value={speed}
-                onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
-                className="w-24 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <span className="text-sm font-medium text-slate-700 min-w-[40px]">{speed}x</span>
-            </div>
+        <div className="flex items-center gap-3 px-4 h-12 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200 min-w-[160px]">
+          <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-700">Time</span>
+            <span className="text-sm font-mono font-semibold text-slate-800">{currentTime}</span>
+            <span className="text-sm text-slate-600">units</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+        <div className="flex items-center gap-3 px-4 h-12 bg-slate-50 rounded-xl border border-slate-200 min-w-[160px]">
+          <Gauge className="w-4 h-4 text-slate-600 flex-shrink-0" />
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-700">Speed</span>
+            <input
+              type="range"
+              min="0.25"
+              max="4"
+              step="0.25"
+              value={speed}
+              onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
+              className="w-16 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            />
+            <span className="text-sm font-medium text-slate-700">{speed}x</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-4 h-12 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200 min-w-[180px]">
           <select
             value={currentAlgorithmId}
             onChange={(e) => onAlgorithmChange(e.target.value)}
-            className="bg-transparent text-sm font-medium text-slate-700 outline-none cursor-pointer"
+            className="bg-transparent text-sm font-medium text-slate-700 outline-none cursor-pointer flex-1"
           >
             {algorithms.map(algo => (
               <option key={algo.id} value={algo.id}>
@@ -127,24 +138,58 @@ export function SimulationControls({
         </div>
 
         {requiresQuantum && onQuantumChange && (
-          <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200">
-            <Clock className="w-5 h-5 text-orange-600" />
-            <div className="flex flex-col">
-              <span className="text-xs text-slate-600">Quantum</span>
+          <div className="flex items-center gap-3 px-4 h-12 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200 min-w-[180px]">
+            <Clock className="w-4 h-4 text-orange-600 flex-shrink-0" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-700">Quantum</span>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                step="1"
+                value={quantum}
+                onChange={(e) => onQuantumChange(parseInt(e.target.value) || 1)}
+                className="w-14 px-2 py-1 text-center text-sm bg-white border border-orange-300 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              <span className="text-sm text-slate-600">units</span>
+            </div>
+          </div>
+        )}
+        
+        {requiresMultilevelParams && onPriorityLevelsChange && onCpuUsageLimitChange && (
+          <>
+            <div className="flex items-center gap-3 px-4 h-12 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200 min-w-[180px]">
+              <Layers className="w-4 h-4 text-purple-600 flex-shrink-0" />
               <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-700">Levels</span>
+                <input
+                  type="number"
+                  min="2"
+                  max="10"
+                  step="1"
+                  value={priorityLevels}
+                  onChange={(e) => onPriorityLevelsChange(parseInt(e.target.value) || 3)}
+                  className="w-14 px-2 py-1 text-center text-sm bg-white border border-purple-300 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 px-4 h-12 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 min-w-[180px]">
+              <Cpu className="w-4 h-4 text-green-600 flex-shrink-0" />
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-700">CPU Limit</span>
                 <input
                   type="number"
                   min="1"
-                  max="20"
+                  max="10"
                   step="1"
-                  value={quantum}
-                  onChange={(e) => onQuantumChange(parseInt(e.target.value) || 1)}
-                  className="w-16 px-2 py-1 text-center text-sm bg-white border border-orange-300 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-orange-500"
+                  value={cpuUsageLimit}
+                  onChange={(e) => onCpuUsageLimitChange(parseInt(e.target.value) || 2)}
+                  className="w-14 px-2 py-1 text-center text-sm bg-white border border-green-300 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-green-500"
                 />
-                <span className="text-xs text-slate-600">units</span>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
