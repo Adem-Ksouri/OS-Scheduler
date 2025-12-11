@@ -1,37 +1,59 @@
-# Compiler and flags
+# Src/Makefile — master Makefile for the whole project
+
 CC = gcc
-CFLAGS = -Wall -Wextra -g -I.
+CFLAGS  = -Wall -Wextra -g -I.
+LDFLAGS = -lpthread
 
-# Source files
-SRCDIR := .
-SRCS := $(shell find $(SRCDIR) -name '*.c' ! -name 'main.c')
+# Use pkg-config for libmicrohttpd whenever possible (best practice)
+ifeq ($(shell pkg-config --exists libmicrohttpd && echo yes),yes)
+    CFLAGS  += $(shell pkg-config --cflags libmicrohttpd)
+    LDFLAGS += $(shell pkg-config --libs   libmicrohttpd)
+else
+    LDFLAGS += -lmicrohttpd
+endif
 
-# Object files (inside build folder)
-OBJDIR := build
-OBJS := $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
+# Uncomment these two lines only if you use HTTPS/TLS in your server
+# LDFLAGS += -lssl -lcrypto
+# CFLAGS  += -DHAVE_TLS
 
-# Target executable
-TARGET := main
+# Paths
+MAIN_SRC     = Main/main.c
+MAIN_OBJ     = Main/main.o
+MAIN_EXE     = Main/main
+LIBCORE      = libcore.a
 
 # Default target
-all: $(TARGET)
+all: $(LIBCORE) $(MAIN_EXE)
 
-# Rule to build object files
-$(OBJDIR)/%.o: %.c
+# Build the static library (all .c files in Src/ except Main/)
+SRCS := $(filter-out $(MAIN_SRC), $(shell find . -name '*.c'))
+OBJS := $(patsubst ./%.c, %.o, $(SRCS))
+
+$(LIBCORE): $(OBJS)
+	$(AR) rcs $@ $^
+
+%.o: ./%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Link object files and main.c into executable
-$(TARGET): $(OBJS) Main/main.c
-	$(CC) $(CFLAGS) Main/main.c $(OBJS) -o $@
+# Build the final executable
+$(MAIN_EXE): $(MAIN_OBJ) $(LIBCORE)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Run the program with the config file
-run: $(TARGET)
-# 	@echo "Running $(TARGET) with $(CONF):"
-# 	./$(TARGET) $(CONF) $(SCHEDULERS_FOLDER)
+$(MAIN_OBJ): $(MAIN_SRC)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean build files
+# Convenience targets
+run: all
+	@echo "Starting OS-Scheduler server on http://localhost:8080 ..."
+	./$(MAIN_EXE)
+
 clean:
-	rm -rf $(OBJDIR) $(TARGET)
+	rm -f $(LIBCORE)
+	rm -f $(MAIN_OBJ) $(MAIN_EXE)
+	find . -name '*.o' -delete
 
-.PHONY: all run clean
+# Optional: rebuild everything from scratch
+rebuild: clean all
+
+.PHONY: all run clean rebuild
