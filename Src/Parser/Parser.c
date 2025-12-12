@@ -8,92 +8,79 @@
 #define MAX_LINE 256
 
 int parser(FILE *f, process* tab, int *nbProc) {
-    char line[256];
+    char line[MAX_LINE];
     *nbProc = 0;
     
     while (fgets(line, sizeof(line), f)) {
         if (*nbProc >= MAX_PROC) {
-            fprintf(stderr, "Maximum number of processes reached\n");
-            return -1;
+            return -1; 
         }
         
         line[strcspn(line, "\n")] = '\0';
         
-        char *line1 = line;
-        while (isspace((unsigned char)*line1)) 
-            line1++;
+        char *line_ptr = line;
+        while (isspace((unsigned char)*line_ptr)) 
+            line_ptr++;
         
-        // Skip comments and empty lines
-        if (*line1 == '#' || *line1 == '\0')
+    
+        if (*line_ptr == '#' || *line_ptr == '\0')
             continue;
         
         char name[20];
         int arrival, exec_time, priority, nbEvents;
         
-        // Parse the first 5 fields
-        int parsed = sscanf(line1, "%s %d %d %d %d", name, &arrival, &exec_time, &priority, &nbEvents);
+        int parsed = sscanf(line_ptr, "%s %d %d %d %d", name, &arrival, &exec_time, &priority, &nbEvents);
+        if (parsed != 5) {
+            return -1; // Format error
+        }
+
+        tab[*nbProc].pid = *nbProc + 1;
+        tab[*nbProc].ppid = 0;
+        strcpy(tab[*nbProc].name, name);
+        tab[*nbProc].arrival = arrival;
+        tab[*nbProc].exec_time = exec_time;
+        tab[*nbProc].rem_time = exec_time; 
+        tab[*nbProc].priority = priority;
+        tab[*nbProc].nbEvents = nbEvents;
+        tab[*nbProc].cpu_usage = 0;
         
-        if (parsed == 5) {
-            tab[*nbProc].pid = *nbProc + 1;
-            tab[*nbProc].ppid = 0;
-            strcpy(tab[*nbProc].name, name);
-            tab[*nbProc].arrival = arrival;
-            tab[*nbProc].exec_time = exec_time;
-            tab[*nbProc].rem_time = exec_time; 
-            tab[*nbProc].priority = priority;
-            tab[*nbProc].nbEvents = nbEvents;
-            tab[*nbProc].cpu_usage = 0;
-            
-            if (nbEvents == 0) {
-                tab[*nbProc].events = NULL;
-            } else {
-                // Allocate memory for events
-                tab[*nbProc].events = (event*)malloc(nbEvents * sizeof(event));
-                if (tab[*nbProc].events == NULL) {
-                    fprintf(stderr, "Memory allocation failed for events\n");
-                    return -1;
-                }
-                
-                // Find position after first 5 fields using strtok
-                char line_copy[256];
-                strcpy(line_copy, line1);
-                
-                char *token = strtok(line_copy, " \t");
-                for (int field = 0; field < 5 && token != NULL; field++) {
-                    token = strtok(NULL, " \t");
-                }
-                
-                // Now parse the events
-                int event_idx = 0;
-                while (token != NULL && event_idx < nbEvents) {
-                    // Parse time
-                    int event_time = atoi(token);
-                    token = strtok(NULL, " \t");
-                    
-                    if (token == NULL) {
-                        fprintf(stderr, "Missing event comment for process %s\n", name);
-                        free(tab[*nbProc].events);
-                        return -1;
-                    }
-                    
-                    // Parse comment
-                    tab[*nbProc].events[event_idx].t = event_time;
-                    strcpy(tab[*nbProc].events[event_idx].comment, token);
-                    
-                    event_idx++;
-                    token = strtok(NULL, " \t");
-                }
-                
-                if (event_idx != nbEvents) {
-                    fprintf(stderr, "Warning: Expected %d events but parsed %d for process %s\n", 
-                            nbEvents, event_idx, name);
-                }
+        if (nbEvents == 0) {
+            tab[*nbProc].events = NULL;
+        } else {
+            tab[*nbProc].events = (event*)malloc(nbEvents * sizeof(event));
+            if (tab[*nbProc].events == NULL) {
+                return -1; // Memory allocation error
             }
             
-            (*nbProc)++;
-        } else {
-            fprintf(stderr, "format incorrect (parsed %d fields): %s\n", parsed, line1);
+            char line_copy[MAX_LINE];
+            strcpy(line_copy, line_ptr);
+            
+            char *token = strtok(line_copy, " \t");
+            for (int i = 0; i < 5 && token != NULL; i++) {
+                token = strtok(NULL, " \t");
+            }
+            
+            for (int event_idx = 0; event_idx < nbEvents; event_idx++) {
+                if (token == NULL) {
+                    free(tab[*nbProc].events);
+                    return -1; // Not enough tokens for events
+                }
+                
+                tab[*nbProc].events[event_idx].t = atoi(token);
+                token = strtok(NULL, " \t");
+                
+                if (token == NULL) {
+                    free(tab[*nbProc].events);
+                    return -1; // Missing comment
+                }
+                
+                strcpy(tab[*nbProc].events[event_idx].comment, token);
+                token = strtok(NULL, " \t");
+            }
         }
+        
+        (*nbProc)++;
     }
+    
     return 0;
 }
