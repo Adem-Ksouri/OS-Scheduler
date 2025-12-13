@@ -12,13 +12,13 @@ interface SimulationControlsProps {
   onStep: () => void;
   onRestart: () => void;
   onSpeedChange: (speed: number) => void;
-  onAlgorithmChange: (algorithmId: string) => void;
-  currentAlgorithmId: string;
+  onAlgorithmChange: (algorithmId: number) => void;  // Changed from string to number
+  currentAlgorithmId: number;  // Changed from string to number
   quantum?: number;
   onQuantumChange?: (quantum: number) => void;
-  priorityLevels?: number;
+  nbPriority?: number;
   cpuUsageLimit?: number;
-  onPriorityLevelsChange?: (levels: number) => void;
+  onNbPriorityChange?: (levels: number) => void;
   onCpuUsageLimitChange?: (limit: number) => void;
 }
 
@@ -35,9 +35,9 @@ export function SimulationControls({
   currentAlgorithmId,
   quantum,
   onQuantumChange,
-  priorityLevels,
+  nbPriority,
   cpuUsageLimit,
-  onPriorityLevelsChange,
+  onNbPriorityChange,
   onCpuUsageLimitChange,
 }: SimulationControlsProps) {
   const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
@@ -51,8 +51,8 @@ export function SimulationControls({
   }, []);
 
   const selectedAlgo = algorithms.find(a => a.id === currentAlgorithmId);
-  const requiresQuantum = selectedAlgo?.requiresQuantum || false;
-  const requiresMultilevelParams = selectedAlgo?.requiresMultilevelParams || false;
+  const requiresQuantum = selectedAlgo?.params?.quantum || false;
+  const requiresMultilevelParams = selectedAlgo?.params?.nb_priority || selectedAlgo?.params?.cpu_usage_limit || false;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 overflow-x-hidden">
@@ -126,7 +126,7 @@ export function SimulationControls({
         <div className="flex items-center gap-2 px-4 h-12 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200 min-w-[180px]">
           <select
             value={currentAlgorithmId}
-            onChange={(e) => onAlgorithmChange(e.target.value)}
+            onChange={(e) => onAlgorithmChange(Number(e.target.value))}
             className="bg-transparent text-sm font-medium text-slate-700 outline-none cursor-pointer flex-1"
           >
             {algorithms.map(algo => (
@@ -156,7 +156,7 @@ export function SimulationControls({
           </div>
         )}
         
-        {requiresMultilevelParams && onPriorityLevelsChange && onCpuUsageLimitChange && (
+        {requiresMultilevelParams && onNbPriorityChange && onCpuUsageLimitChange && (
           <>
             <div className="flex items-center gap-3 px-4 h-12 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200 min-w-[180px]">
               <Layers className="w-4 h-4 text-purple-600 flex-shrink-0" />
@@ -167,8 +167,8 @@ export function SimulationControls({
                   min="2"
                   max="10"
                   step="1"
-                  value={priorityLevels}
-                  onChange={(e) => onPriorityLevelsChange(parseInt(e.target.value) || 3)}
+                  value={nbPriority}
+                  onChange={(e) => onNbPriorityChange(parseInt(e.target.value) || 3)}
                   className="w-14 px-2 py-1 text-center text-sm bg-white border border-purple-300 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>

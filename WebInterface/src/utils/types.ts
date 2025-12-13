@@ -3,7 +3,6 @@ export interface CPUEvent {
   comment: string;    
 }
 
-
 export interface Process {
   pid: number;
   ppid: number;
@@ -17,7 +16,6 @@ export interface Process {
   events: CPUEvent[];
 }
 
-
 export interface Execute {
   p: Process;
   ts: number;         
@@ -26,11 +24,15 @@ export interface Execute {
   events: CPUEvent[];
 }
 
+// Updated to match new API structure
 export interface AlgorithmInfo {
-  id: string;
+  id: number;  // Changed from string to number
   name: string;
-  requiresQuantum: boolean;
-  requiresMultilevelParams?: boolean; // ADD THIS LINE ONLY
+  params: {
+    quantum?: boolean;
+    nb_priority?: boolean;
+    cpu_usage_limit?: boolean;
+  };
 }
 
 export interface ProcessState extends Process {

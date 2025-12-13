@@ -10,9 +10,9 @@ import { initializeProcessStates } from '../utils/processHelpers';
 
 interface SimulatorInterfaceProps {
   processes: Process[];
-  algorithmId: string;
+  algorithmId: number;  // Changed from string to number
   quantum: number;
-  priorityLevels: number;
+  nbPriority: number;
   cpuUsageLimit: number;
   onReset: () => void;
 }
@@ -21,7 +21,7 @@ export function SimulatorInterface({
   processes,
   algorithmId,
   quantum,
-  priorityLevels,
+  nbPriority,
   cpuUsageLimit,
   onReset,
 }: SimulatorInterfaceProps) {
@@ -33,7 +33,7 @@ export function SimulatorInterface({
   const [processStates, setProcessStates] = useState<ProcessState[]>([]);
   const [currentAlgorithmId, setCurrentAlgorithmId] = useState(algorithmId);
   const [currentQuantum, setCurrentQuantum] = useState(quantum);
-  const [currentPriorityLevels, setCurrentPriorityLevels] = useState(priorityLevels);
+  const [currentNbPriority, setCurrentNbPriority] = useState(nbPriority);
   const [currentCpuUsageLimit, setCurrentCpuUsageLimit] = useState(cpuUsageLimit);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export function SimulatorInterface({
       const algos = await getAvailableAlgorithms();
       setAlgorithms(algos);
       const algo = algos.find(a => a.id === currentAlgorithmId);
-      setAlgorithmName(algo?.name || currentAlgorithmId);
+      setAlgorithmName(algo?.name || String(currentAlgorithmId));
     };
     fetchAlgorithms();
   }, [currentAlgorithmId]);
@@ -76,7 +76,7 @@ export function SimulatorInterface({
           processes, 
           currentAlgorithmId, 
           currentQuantum,
-          currentPriorityLevels,
+          currentNbPriority,
           currentCpuUsageLimit
         );
         
@@ -107,7 +107,7 @@ export function SimulatorInterface({
     return () => {
       cancelled = true;
     };
-  }, [processes, currentAlgorithmId, currentQuantum, currentPriorityLevels, currentCpuUsageLimit]);
+  }, [processes, currentAlgorithmId, currentQuantum, currentNbPriority, currentCpuUsageLimit]);
 
   useEffect(() => {
     if (isRunning && !isPaused) {
@@ -278,8 +278,8 @@ export function SimulatorInterface({
   }
 
   const selectedAlgo = algorithms.find(a => a.id === currentAlgorithmId);
-  const requiresQuantum = selectedAlgo?.requiresQuantum || false;
-  const requiresMultilevelParams = selectedAlgo?.requiresMultilevelParams || false;
+  const requiresQuantum = selectedAlgo?.params?.quantum || false;
+  const requiresMultilevelParams = selectedAlgo?.params?.nb_priority || selectedAlgo?.params?.cpu_usage_limit || false;
 
   return (
     <motion.div
@@ -302,7 +302,7 @@ export function SimulatorInterface({
           <p className="text-slate-600">
             Algorithm: <span className="font-semibold text-slate-800">{algorithmName}</span>
             {requiresQuantum && ` (Quantum: ${currentQuantum})`}
-            {requiresMultilevelParams && ` (Levels: ${currentPriorityLevels}, CPU Limit: ${currentCpuUsageLimit})`}
+            {requiresMultilevelParams && ` (Levels: ${currentNbPriority}, CPU Limit: ${currentCpuUsageLimit})`}
           </p>
         </div>
 
@@ -321,9 +321,9 @@ export function SimulatorInterface({
               currentAlgorithmId={currentAlgorithmId}
               quantum={currentQuantum}
               onQuantumChange={setCurrentQuantum}
-              priorityLevels={currentPriorityLevels}
+              nbPriority={currentNbPriority}
               cpuUsageLimit={currentCpuUsageLimit}
-              onPriorityLevelsChange={setCurrentPriorityLevels}
+              onNbPriorityChange={setCurrentNbPriority}
               onCpuUsageLimitChange={setCurrentCpuUsageLimit}
             />
 

@@ -1,10 +1,6 @@
 import { Process, Execute , AlgorithmInfo} from './types';
-import React from 'react';
 
-
-const API_BASE_URL =  import.meta.env.VITE_API_SERVER_URL;
-
-
+const API_BASE_URL = import.meta.env.VITE_API_SERVER_URL;
 const REQUEST_TIMEOUT = 10000; 
 
 export interface ScheduleResponse {
@@ -16,18 +12,18 @@ export interface ScheduleResponse {
 
 export interface ScheduleRequest {
   processes: Process[];
-  algorithm: string;
+  algorithm: number;  // Changed from string to number
   quantum?: number;
-  priority_levels?: number;      // ADD THIS
-  cpu_usage_limit?: number;      // ADD THIS
+  nb_priority?: number;       // Changed from priority_levels
+  cpu_usage_limit?: number;
 }
 
 export async function scheduleProcesses(
   processes: Process[],
-  algorithm: string,
+  algorithmId: number,  // Changed from string to number
   quantum?: number,
-  priorityLevels?: number,        // ADD THIS
-  cpuUsageLimit?: number          // ADD THIS
+  nbPriority?: number,        // Changed parameter name
+  cpuUsageLimit?: number
 ): Promise<Execute[]> {
   
   try {
@@ -36,11 +32,12 @@ export async function scheduleProcesses(
 
     const requestBody: ScheduleRequest = {
       processes,
-      algorithm,
+      algorithm: algorithmId,  // Now sending number
       ...(quantum !== undefined && { quantum }),
-      ...(priorityLevels !== undefined && { priority_levels: priorityLevels }),      // ADD THIS
-      ...(cpuUsageLimit !== undefined && { cpu_usage_limit: cpuUsageLimit }),        // ADD THIS
+      ...(nbPriority !== undefined && { nb_priority: nbPriority }),
+      ...(cpuUsageLimit !== undefined && { cpu_usage_limit: cpuUsageLimit }),
     };
+    
     const response = await fetch(`${API_BASE_URL}/schedule`, {
       method: 'POST',
       headers: {
@@ -70,14 +67,12 @@ export async function scheduleProcesses(
   }
 }
 
-
 /**
  * Get server status and available algorithms
  */
 export async function getServerStatus(): Promise<{
   online: boolean;
   algorithms: AlgorithmInfo[];
-
 }> {
   try {
     const controller = new AbortController();
@@ -91,20 +86,21 @@ export async function getServerStatus(): Promise<{
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      return { online: false ,
-        algorithms:[],
-       };
+      return { 
+        online: false,
+        algorithms: [],
+      };
     }
 
     const data = await response.json();
     return {
       online: true,
-      algorithms: data.algorithms,
-  
+      algorithms: data.algorithms || [],
     };
   } catch {
-    return { online: false  ,
-        algorithms:[],
-       };
+    return { 
+      online: false,
+      algorithms: [],
+    };
   }
 }

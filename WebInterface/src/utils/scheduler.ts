@@ -1,5 +1,5 @@
 import { Process, Execute, AlgorithmInfo } from './types';
-import { scheduleProcesses,getServerStatus } from './api';
+import { scheduleProcesses, getServerStatus } from './api';
 
 /**
  * Run scheduler using the API
@@ -7,10 +7,10 @@ import { scheduleProcesses,getServerStatus } from './api';
  */
 export async function runScheduler(
   processes: Process[],
-  algorithmId: string,
+  algorithmId: number,  // Changed from string to number
   quantum: number = 4,
-  priorityLevels?: number,        // ADD THIS
-  cpuUsageLimit?: number          // ADD THIS
+  nbPriority?: number,        // Changed parameter name
+  cpuUsageLimit?: number
 ): Promise<Execute[]> {
   
   try {
@@ -18,8 +18,8 @@ export async function runScheduler(
       processes, 
       algorithmId, 
       quantum,
-      priorityLevels,    // ADD THIS
-      cpuUsageLimit      // ADD THIS
+      nbPriority,
+      cpuUsageLimit
     );
     return executes;
   } catch (error) {
@@ -27,7 +27,6 @@ export async function runScheduler(
     return getStaticFallbackData();
   }
 }
-
 
 /**
  * Static fallback data - always returns the same result
@@ -48,12 +47,12 @@ function getStaticFallbackData(): Execute[] {
         nbEvents: 2,
         events: [
           { t: 2, comment: 'Calculate A + B' },
-        { t: 5, comment: 'Store result in register' },
+          { t: 5, comment: 'Store result in register' },
         ],
       },
       ts: 0,
       te: 7,
-      event_count:2,
+      event_count: 2,
       events: [
         { t: 2, comment: 'Calculate A + B' },
         { t: 5, comment: 'Store result in register' },
@@ -70,12 +69,12 @@ function getStaticFallbackData(): Execute[] {
         cpu_usage: 0,
         priority: 1,
         nbEvents: 1,
-        events: [{ t: 2, comment: 'Perform logical AND' },],
+        events: [{ t: 2, comment: 'Perform logical AND' }],
       },
       ts: 7,
       te: 11,
-      event_count:1,
-      events: [{ t: 2, comment: 'Perform logical AND' },],
+      event_count: 1,
+      events: [{ t: 9, comment: 'Perform logical AND' }],
     },
     {
       p: {
@@ -89,16 +88,16 @@ function getStaticFallbackData(): Execute[] {
         priority: 3,
         nbEvents: 2,
         events: [
-           { t: 3, comment: 'Load data from memory' },
-        { t: 6, comment: 'Write to cache' },
+          { t: 3, comment: 'Load data from memory' },
+          { t: 6, comment: 'Write to cache' },
         ],
       },
       ts: 11,
       te: 19,
-      event_count:2,
+      event_count: 2,
       events: [
-       { t: 3, comment: 'Load data from memory' },
-        { t: 6, comment: 'Write to cache' },
+        { t: 14, comment: 'Load data from memory' },
+        { t: 17, comment: 'Write to cache' },
       ],
     },
     {
@@ -112,12 +111,12 @@ function getStaticFallbackData(): Execute[] {
         cpu_usage: 0,
         priority: 2,
         nbEvents: 1,
-        events: [ { t: 2, comment: 'Multiply operands' },],
+        events: [{ t: 2, comment: 'Multiply operands' }],
       },
       ts: 19,
       te: 24,
-      event_count:1,
-      events: [ { t: 2, comment: 'Multiply operands' },],
+      event_count: 1,
+      events: [{ t: 21, comment: 'Multiply operands' }],
     },
   ];
 }
@@ -126,7 +125,7 @@ export async function getAvailableAlgorithms(): Promise<AlgorithmInfo[]> {
   try {
     const status = await getServerStatus();
     
-    if (status.online && status.algorithms) {
+    if (status.online && status.algorithms && status.algorithms.length > 0) {
       return status.algorithms;
     }
     
@@ -136,14 +135,31 @@ export async function getAvailableAlgorithms(): Promise<AlgorithmInfo[]> {
     return getLocalAlgorithms();
   }
 }
+
 function getLocalAlgorithms(): AlgorithmInfo[] {
   return [
-    { id: 'FCFS', name: 'First Come First Served', requiresQuantum: false },
-    { id: 'SJF', name: 'Shortest Job First', requiresQuantum: false },
-    { id: 'Priority-Preemptive', name: 'Priority (Preemptive)', requiresQuantum: false },
-    { id: 'Priority-Non-Preemptive', name: 'Priority (Non-Preemptive)', requiresQuantum: false },
-    { id: 'RR', name: 'Round Robin', requiresQuantum: true },
-    { id: 'Multilevel', name: 'Multilevel', requiresQuantum: false, requiresMultilevelParams: true }, // ADD THIS LINE
+    { 
+      id: 1, 
+      name: 'PreemptivePriority', 
+      params: {} 
+    },
+    { 
+      id: 2, 
+      name: 'RoundRobin', 
+      params: { quantum: true } 
+    },
+    { 
+      id: 3, 
+      name: 'Fifo', 
+      params: {} 
+    },
+    { 
+      id: 4, 
+      name: 'Multilevel', 
+      params: { 
+        nb_priority: true, 
+        cpu_usage_limit: true 
+      } 
+    },
   ];
 }
-

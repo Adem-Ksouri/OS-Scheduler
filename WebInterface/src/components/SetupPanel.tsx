@@ -8,9 +8,9 @@ import { getAvailableAlgorithms } from '../utils/scheduler';
 interface SetupPanelProps {
   onStartSimulation: (
     processes: Process[],
-    algorithmId: string,
+    algorithmId: number,  // Changed from string to number
     quantum: number,
-    priorityLevels: number,
+    nbPriority: number,
     cpuUsageLimit: number
   ) => void;
 }
@@ -57,7 +57,7 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
       priority: 3,
       nbEvents: 2,
       events: [
-         { t: 3, comment: 'Load data from memory' },
+        { t: 3, comment: 'Load data from memory' },
         { t: 6, comment: 'Write to cache' },
       ],
     },
@@ -72,24 +72,25 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
       priority: 2,
       nbEvents: 1,
       events: [
-         { t: 2, comment: 'Multiply operands' },
+        { t: 2, comment: 'Multiply operands' },
       ],
     },
   ]);
   
   const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('FCFS');
+  const [selectedAlgorithmId, setSelectedAlgorithmId] = useState<number>(1);  // Changed to number
   const [quantum, setQuantum] = useState(4);
   const [isLoadingAlgorithms, setIsLoadingAlgorithms] = useState(true);
-  const [priorityLevels, setPriorityLevels] = useState(3);
+  const [nbPriority, setNbPriority] = useState(3);
   const [cpuUsageLimit, setCpuUsageLimit] = useState(2);
+
   useEffect(() => {
     const fetchAlgorithms = async () => {
       setIsLoadingAlgorithms(true);
       const algos = await getAvailableAlgorithms();
       setAlgorithms(algos);
       if (algos.length > 0) {
-        setSelectedAlgorithm(algos[0].id);
+        setSelectedAlgorithmId(algos[0].id);
       }
       setIsLoadingAlgorithms(false);
     };
@@ -100,19 +101,22 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
     const newProcesses = generateRandomProcesses();
     setProcesses(newProcesses);
   };
-const handleStart = () => {
-  if (processes.length === 0) {
-    alert('Please add at least one process');
-    return;
-  }
-  if (!selectedAlgorithm) {
-    alert('Please select an algorithm');
-    return;
-  }
-  onStartSimulation(processes, selectedAlgorithm, quantum, priorityLevels, cpuUsageLimit);
-};
 
-  const selectedAlgoInfo = algorithms.find(a => a.id === selectedAlgorithm);
+  const handleStart = () => {
+    if (processes.length === 0) {
+      alert('Please add at least one process');
+      return;
+    }
+    if (!selectedAlgorithmId) {
+      alert('Please select an algorithm');
+      return;
+    }
+    onStartSimulation(processes, selectedAlgorithmId, quantum, nbPriority, cpuUsageLimit);
+  };
+
+  const selectedAlgo = algorithms.find(a => a.id === selectedAlgorithmId);
+  const requiresQuantum = selectedAlgo?.params?.quantum || false;
+  const requiresMultilevelParams = selectedAlgo?.params?.nb_priority || selectedAlgo?.params?.cpu_usage_limit || false;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
@@ -163,8 +167,8 @@ const handleStart = () => {
                   </div>
                 ) : (
                   <select
-                    value={selectedAlgorithm}
-                    onChange={(e) => setSelectedAlgorithm(e.target.value)}
+                    value={selectedAlgorithmId}
+                    onChange={(e) => setSelectedAlgorithmId(Number(e.target.value))}
                     className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {algorithms.map(algo => (
@@ -176,7 +180,7 @@ const handleStart = () => {
                 )}
               </div>
 
-              {selectedAlgoInfo?.requiresQuantum && (
+              {requiresQuantum && (
                 <div className="mb-6 p-4 bg-blue-100 rounded-xl border border-blue-200">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Time Quantum
@@ -194,48 +198,49 @@ const handleStart = () => {
                   />
                 </div>
               )}
-              {selectedAlgoInfo?.requiresMultilevelParams && (
-                  <>
-                    <div className="mb-6 p-4 bg-purple-100 rounded-xl border border-purple-200">
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Priority Levels
-                        <span className="ml-1 text-slate-400 cursor-help" title="Number of priority queues">
-                          <Info className="w-3 h-3 inline" />
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        min="2"
-                        max="10"
-                        value={priorityLevels}
-                        onChange={(e) => setPriorityLevels(parseInt(e.target.value) || 3)}
-                        className="w-full px-4 py-3 bg-white border border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
-                    </div>
 
-                    <div className="mb-6 p-4 bg-green-100 rounded-xl border border-green-200">
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        CPU Usage Limit
-                        <span className="ml-1 text-slate-400 cursor-help" title="CPU usage threshold for demotion">
-                          <Info className="w-3 h-3 inline" />
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={cpuUsageLimit}
-                        onChange={(e) => setCpuUsageLimit(parseInt(e.target.value) || 2)}
-                        className="w-full px-4 py-3 bg-white border border-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    </div>
-                  </>
-                )}
+              {requiresMultilevelParams && (
+                <>
+                  <div className="mb-6 p-4 bg-purple-100 rounded-xl border border-purple-200">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Priority Levels
+                      <span className="ml-1 text-slate-400 cursor-help" title="Number of priority queues">
+                        <Info className="w-3 h-3 inline" />
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      min="2"
+                      max="10"
+                      value={nbPriority}
+                      onChange={(e) => setNbPriority(parseInt(e.target.value) || 3)}
+                      className="w-full px-4 py-3 bg-white border border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="mb-6 p-4 bg-green-100 rounded-xl border border-green-200">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      CPU Usage Limit
+                      <span className="ml-1 text-slate-400 cursor-help" title="CPU usage threshold for demotion">
+                        <Info className="w-3 h-3 inline" />
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={cpuUsageLimit}
+                      onChange={(e) => setCpuUsageLimit(parseInt(e.target.value) || 2)}
+                      className="w-full px-4 py-3 bg-white border border-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="space-y-3">
                 <button
                   onClick={handleStart}
-                  disabled={processes.length === 0 || !selectedAlgorithm || isLoadingAlgorithms}
+                  disabled={processes.length === 0 || !selectedAlgorithmId || isLoadingAlgorithms}
                   className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                 >
                   <Play className="w-5 h-5" />
