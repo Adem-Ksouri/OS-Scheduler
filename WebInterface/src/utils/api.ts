@@ -4,9 +4,10 @@ const API_BASE_URL = import.meta.env.VITE_API_SERVER_URL;
 const REQUEST_TIMEOUT = 10000; 
 
 export interface ScheduleResponse {
-  executes: Execute[];
-  totalTime: number;
   success: boolean;
+  algorithm: string;
+  totalProcesses: number;
+  executes: Execute[];
   error?: string;
 }
 

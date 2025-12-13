@@ -82,8 +82,8 @@ export function SimulatorInterface({
         
         if (!cancelled) {
           setExecutes(result);
-          const maxTime = result.length > 0 ? Math.max(...result.map(e => e.te)) : 0;
-          setTotalTime(maxTime);
+         const maxTime = result.length > 0 ? Math.max(...result.map(e => e.te)) : 0;
+         setTotalTime(maxTime);
         
           setProcessStates(initializeProcessStates(processes));
           setCurrentTime(0);
