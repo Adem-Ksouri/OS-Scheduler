@@ -41,10 +41,16 @@ execute* rr_scheduler(process* processes, int n, int Q, int* out_count) {
         int ts = now;
         int te = now + run_time;
 
-        p->rem_time -= run_time; 
-
+        int offset = p->exec_time - p->rem_time;
+        
+p->rem_time -= run_time; 
         int cnte;
-        event* current_events = getEvents(*p, ts, te, &cnte);
+        event* current_events = getEvents(*p, offset, offset + run_time, &cnte);
+        
+    
+        for (int i = 0; i < cnte; i++) {
+            current_events[i].t = ts + (current_events[i].t - offset);
+        }
 
         if (count == capacity) {
             capacity *= 2;

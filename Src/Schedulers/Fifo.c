@@ -4,25 +4,33 @@
 
 execute* fifo_scheduler(process* processes, int n, int* out_count) {
     qsort(processes, n, sizeof(process), compare_process);
-
     execute* result = (execute*)malloc(n * sizeof(execute));
     if (!result) return NULL;
-
+    
     int ts = 0;
     for (int i = 0; i < n; i++) {
         if (ts < processes[i].arrival)
             ts = processes[i].arrival;
-
+        
         int te = ts + processes[i].exec_time;
-
+        
+        int event_count = 0;
+        
+        event* filtered_events = getEvents(processes[i], 0, processes[i].exec_time, &event_count);
+      
+        for (int j = 0; j < event_count; j++) {
+            filtered_events[j].t = ts + filtered_events[j].t;
+        }
+        
         result[i].p = make_process(&processes[i]);
         result[i].ts = ts;
         result[i].te = te;
-        result[i].events = processes[i].events;
-
+        result[i].event_count = event_count;
+        result[i].events = filtered_events;
+        
         ts = te;
     }
-
+    
     *out_count = n;
     return result;
 }

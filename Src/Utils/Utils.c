@@ -17,30 +17,25 @@ int compare_event(const void* a, const void* b) {
 
     return (e1->t - e2->t);
 }
-
 event* getEvents(process p, int tl, int tr, int* out_count) {
-    int st = 0;
-    while (st < p.nbEvents && p.events[st].t < tl) {
-        st++;
-    }
-
     event* result = NULL;
     int count = 0;
 
-    while (st < p.nbEvents) {
-        if (p.events[st].t >= tr)
-            break;
-
-        result = realloc(result, (count + 1) * sizeof(event));
-        result[count] = p.events[st];
-        count++;
-        st++;
+    for (int i = 0; i < p.nbEvents; i++) {
+      
+        int event_time = p.events[i].t;
+        
+        if (event_time >= tl && event_time < tr) {
+            result = realloc(result, (count + 1) * sizeof(event));
+            result[count].t = event_time;
+            strcpy(result[count].comment, p.events[i].comment);
+            count++;
+        }
     }
 
     *out_count = count;
     return result;
 }
-
 execute* make_execute(process* p, int ts, int te, int event_count, event* events) {
     execute* exc = (execute*)malloc(sizeof(execute));
     exc->p = p;
