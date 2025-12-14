@@ -62,6 +62,7 @@ The simulator consists of two main components:
 ### Prerequisites
 ```bash
 # Ubuntu/Debian
+sudo apt-get install gcc make libjson-c-dev
 wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.75.tar.gz
 tar -xvf libmicrohttpd-0.9.75.tar.gz
 cd libmicrohttpd-0.9.75
