@@ -51,7 +51,7 @@ The simulator consists of two main components:
 - Real-time Gantt chart visualization
 - Performance metrics dashboard
 - Algorithm parameter controls
-<img src="assets/architecture%20diagrame.png" alt="Architecture Diagram" width="500">
+<img src="assets/architecture%20diagrame.png" alt="Architecture Diagram" width="300">
 
 
 ---
@@ -115,16 +115,16 @@ npm run dev
 ```bash
 cd Src
 make run-original
-
+- A list of available algorithms will be displayed
 # Follow on-screen prompts to:
 # 1. Choose scheduling algorithm
 # 2. Enter parameters (if required)
 # 3. View results
-
+```
 ## Interactive Mode Architecture
 
 <p align="center">
-  <img src="assets/cliversion.png" alt="Interactive Mode Architecture" width="500">
+  <img src="assets/cliversion.png" alt="Interactive Mode Architecture" width="400">
 </p>
 
 
