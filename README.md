@@ -62,7 +62,9 @@ The simulator consists of two main components:
 ### Prerequisites
 ```bash
 # Ubuntu/Debian
-sudo apt-get install gcc make libmicrohttpd-dev libjson-c-dev
+wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.75.tar.gz
+tar -xvf libmicrohttpd-0.9.75.tar.gz
+cd libmicrohttpd-0.9.75
 
 # Node.js 18+ and npm
 node --version  # Should be 18+
@@ -73,6 +75,10 @@ node --version  # Should be 18+
 # Clone repository
 git clone <your-repo-url>
 cd os-scheduler-simulator
+./configure --disable-examples
+make -j$(nproc)
+sudo make install
+sudo ldconfig
 
 # Build backend
 cd Src
