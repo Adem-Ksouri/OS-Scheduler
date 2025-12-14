@@ -10,7 +10,7 @@
 #define PORT 8080
 #define MAX_UPLOAD_SIZE (100 * 1024)
 
-enum MHD_Result HandleRequest(
+int HandleRequest(
     void *cls,
     struct MHD_Connection *connection,
     const char *url,
@@ -21,7 +21,7 @@ enum MHD_Result HandleRequest(
     void **con_cls
 ) {
     struct MHD_Response *response;
-    enum MHD_Result ret;
+    int ret;
     int status_code = MHD_HTTP_OK;
     
     if (strcmp(method, "OPTIONS") == 0) {

@@ -1,31 +1,57 @@
+# ===============================
+# Compiler & tools
+# ===============================
 CC = gcc
-CFLAGS = -Wall -Wextra -g -I.. -I../Include
-LIBS_SERVER = -lmicrohttpd -ljson-c -lpthread
 
+PKG_CFLAGS := $(shell pkg-config --cflags libmicrohttpd json-c)
+PKG_LIBS   := $(shell pkg-config --libs libmicrohttpd json-c)
+
+CFLAGS = -Wall -Wextra -g -I.. -I../Include $(PKG_CFLAGS)
+LDFLAGS =
+LIBS_SERVER = $(PKG_LIBS) -lpthread
+
+
+# ===============================
+# Directories
+# ===============================
 SRCDIR := .
 OBJDIR := build
 MAINDIR := Main
 SERVERDIR := Server
 
-
 MAKEFILE_DIR := $(shell pwd)
 
-COMMON_SRCS := $(shell find $(SRCDIR) -name '*.c' ! -path '*/Main/*' ! -path '*/Server/*')
+
+# ===============================
+# Source files
+# ===============================
+COMMON_SRCS := $(shell find $(SRCDIR) -name '*.c' \
+	! -path '*/Main/*' \
+	! -path '*/Server/*')
+
 COMMON_OBJS := $(patsubst %.c,$(OBJDIR)/%.o,$(COMMON_SRCS))
 
 
-SERVER_SRCS := $(SERVERDIR)/ResponseUtils.c \
-               $(SERVERDIR)/SchedulerExecutor.c \
-               $(SERVERDIR)/RequestHandler.c \
-               $(SERVERDIR)/HttpServer.c
+SERVER_SRCS := \
+	$(SERVERDIR)/ResponseUtils.c \
+	$(SERVERDIR)/SchedulerExecutor.c \
+	$(SERVERDIR)/RequestHandler.c \
+	$(SERVERDIR)/HttpServer.c
+
 SERVER_OBJS := $(patsubst %.c,$(OBJDIR)/%.o,$(SERVER_SRCS))
 
 
+# ===============================
+# Targets
+# ===============================
 ORIGINAL_TARGET := main
 CLI_TARGET := scheduler_cli
 SERVER_TARGET := scheduler_server
 
 
+# ===============================
+# Default target
+# ===============================
 all: build
 
 
@@ -36,37 +62,38 @@ build: $(ORIGINAL_TARGET) $(CLI_TARGET) $(SERVER_TARGET)
 	@echo "  - $(CLI_TARGET)       : CLI version (used by server)"
 	@echo "  - $(SERVER_TARGET)    : HTTP API server"
 	@echo ""
-	@echo "Current directory: $(MAKEFILE_DIR)"
-	@echo ""
-	@echo "Usage:"
-	@echo "  make run           - Start the HTTP server (default)"
-	@echo "  make run-original  - Run original interactive version"
 
 
+# ===============================
+# Run server
+# ===============================
 run: $(SERVER_TARGET) $(CLI_TARGET)
 	@echo "Starting HTTP API Server on port 8080..."
 	@echo "Working directory: $(MAKEFILE_DIR)"
 	@if [ ! -f "$(CLI_TARGET)" ]; then \
 		echo "ERROR: $(CLI_TARGET) not found!"; \
-		echo "Please run 'make' first to build the executables."; \
 		exit 1; \
 	fi
 	@if [ ! -x "$(CLI_TARGET)" ]; then \
-		echo "ERROR: $(CLI_TARGET) is not executable!"; \
 		chmod +x $(CLI_TARGET); \
-		echo "Fixed: Made $(CLI_TARGET) executable"; \
 	fi
-	@echo "✓ $(CLI_TARGET) is ready"
 	@echo ""
 	@echo "Press Ctrl+C to stop"
 	@echo ""
 	@cd $(MAKEFILE_DIR) && ./$(SERVER_TARGET) --server
 
 
+# ===============================
+# Object build rule
+# ===============================
 $(OBJDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+
+# ===============================
+# Executables
+# ===============================
 $(ORIGINAL_TARGET): $(COMMON_OBJS) $(MAINDIR)/main.c
 	@echo "Building $(ORIGINAL_TARGET)..."
 	$(CC) $(CFLAGS) $(MAINDIR)/main.c $(COMMON_OBJS) -o $@
@@ -81,10 +108,18 @@ $(CLI_TARGET): $(COMMON_OBJS) $(MAINDIR)/main_cli.c
 
 $(SERVER_TARGET): $(COMMON_OBJS) $(SERVER_OBJS) $(MAINDIR)/main_server.c
 	@echo "Building $(SERVER_TARGET)..."
-	$(CC) $(CFLAGS) $(MAINDIR)/main_server.c $(COMMON_OBJS) $(SERVER_OBJS) $(LIBS_SERVER) -o $@
+	$(CC) $(CFLAGS) \
+		$(MAINDIR)/main_server.c \
+		$(COMMON_OBJS) \
+		$(SERVER_OBJS) \
+		$(LIBS_SERVER) \
+		-o $@
 	@chmod +x $@
 
 
+# ===============================
+# Utilities
+# ===============================
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf $(OBJDIR)
@@ -95,28 +130,24 @@ clean:
 
 run-original: $(ORIGINAL_TARGET)
 	@echo "Running original interactive version..."
-	@echo ""
 	@cd $(MAKEFILE_DIR) && ./$(ORIGINAL_TARGET) ../UnitTests/TestFiles/config.txt
 
-run-server: run
+
 test:
 	@echo "Running unit tests..."
 	$(MAKE) -C ../UnitTests run
 
-.PHONY: test
 
 help:
 	@echo "OS Scheduler Simulator - Makefile"
 	@echo ""
 	@echo "Targets:"
 	@echo "  make              - Build all executables"
-	@echo "  make run          - Start HTTP server (default) on port 8080"
+	@echo "  make run          - Start HTTP server on port 8080"
 	@echo "  make run-original - Run original interactive version"
-	@echo "  make run-cli      - Test CLI version manually"
 	@echo "  make clean        - Remove all build artifacts"
-	@echo "  make help         - Show this help message"
 	@echo "  make test         - Run unit tests"
 	@echo ""
 
 
-.PHONY: all build run run-server run-original run-cli test clean help check install
+.PHONY: all build run clean run-original test help
