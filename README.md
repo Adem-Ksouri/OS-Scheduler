@@ -3,7 +3,7 @@
 A comprehensive, interactive web-based operating system scheduler simulator with real-time visualization of CPU scheduling algorithms. This project features a C backend with HTTP API server and a modern React frontend with animated Gantt charts and process state tracking.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C-lightgrey.svg)
 ![C](https://img.shields.io/badge/C-99-green.svg)
 ![React](https://img.shields.io/badge/React-18-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)
@@ -51,8 +51,9 @@ The simulator consists of two main components:
 - Real-time Gantt chart visualization
 - Performance metrics dashboard
 - Algorithm parameter controls
-<img src="assets/architecture%20diagrame.png" alt="Architecture Diagram" width="300">
-
+<p align="center">
+<img src="assets/architecture%20diagrame.png" alt="Architecture Diagram" width="500" height="850">
+</p>
 
 ---
 
@@ -117,19 +118,16 @@ cd Src
 make run-original
 - A list of available algorithms will be displayed
 # Follow on-screen prompts to:
-# 1. Choose scheduling algorithm
+# 1. Choose a scheduling algorithm
 # 2. Enter parameters (if required)
 # 3. View results
 ```
-## Interactive Mode Architecture
+# Interactive Mode Architecture
 
 <p align="center">
-  <img src="assets/cliversion.png" alt="Interactive Mode Architecture" width="400">
+  <img src="assets/cli version.png" alt="Interactive Mode Architecture" >
 </p>
 
-
-
-```
 
 ---
 
@@ -140,12 +138,12 @@ make run-original
 - No preemption
 
 ### 2. Round Robin
-- Time-sharing with fixed quantum
+- Time-sharing with a fixed quantum
 - **Parameter**: `quantum` (time slice per process)
 - Fair CPU distribution
 
 ### 3. Preemptive Priority
-- Executes highest priority first
+- Executes the highest priority first
 - Preempts lower priority processes
 - Risk of starvation for low priority
 
