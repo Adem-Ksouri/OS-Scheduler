@@ -51,6 +51,7 @@ The simulator consists of two main components:
 - Real-time Gantt chart visualization
 - Performance metrics dashboard
 - Algorithm parameter controls
+![Architecture Diagram](assets/architecture%20diagrame.png)
 
 ---
 
@@ -118,6 +119,8 @@ make run-original
 # 1. Choose scheduling algorithm
 # 2. Enter parameters (if required)
 # 3. View results
+![Interactive mode architecture ](assets/cli%20version.png)
+
 ```
 
 ---
