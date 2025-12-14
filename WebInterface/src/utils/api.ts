@@ -1,4 +1,4 @@
-import { Process, Execute , AlgorithmInfo} from './types';
+import { Process, Execute, AlgorithmInfo } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_SERVER_URL;
 const REQUEST_TIMEOUT = 10000; 
@@ -13,17 +13,17 @@ export interface ScheduleResponse {
 
 export interface ScheduleRequest {
   processes: Process[];
-  algorithm: number;  // Changed from string to number
+  algorithm: string;  // Send algorithm name as string
   quantum?: number;
-  nb_priority?: number;       // Changed from priority_levels
+  nb_priority?: number;
   cpu_usage_limit?: number;
 }
 
 export async function scheduleProcesses(
-  processes: Process[],
-  algorithmId: number,  // Changed from string to number
+  processes: Process[], 
+  algorithmName: string,  
   quantum?: number,
-  nbPriority?: number,        // Changed parameter name
+  nbPriority?: number,
   cpuUsageLimit?: number
 ): Promise<Execute[]> {
   
@@ -33,11 +33,13 @@ export async function scheduleProcesses(
 
     const requestBody: ScheduleRequest = {
       processes,
-      algorithm: algorithmId,  // Now sending number
+      algorithm: algorithmName,
       ...(quantum !== undefined && { quantum }),
       ...(nbPriority !== undefined && { nb_priority: nbPriority }),
       ...(cpuUsageLimit !== undefined && { cpu_usage_limit: cpuUsageLimit }),
     };
+    
+    console.log('Sending request:', requestBody);
     
     const response = await fetch(`${API_BASE_URL}/schedule`, {
       method: 'POST',
@@ -51,10 +53,13 @@ export async function scheduleProcesses(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Server error response:', errorText);
+      throw new Error(`Server returned ${response.status}: ${errorText}`);
     }
 
     const data: ScheduleResponse = await response.json();
+    console.log('Received response:', data);
 
     if (!data.success || !data.executes) {
       throw new Error(data.error || 'Invalid server response');
@@ -68,9 +73,6 @@ export async function scheduleProcesses(
   }
 }
 
-/**
- * Get server status and available algorithms
- */
 export async function getServerStatus(): Promise<{
   online: boolean;
   algorithms: AlgorithmInfo[];
@@ -79,7 +81,7 @@ export async function getServerStatus(): Promise<{
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-    const response = await fetch(`${API_BASE_URL}/status`, {
+    const response = await fetch(`${API_BASE_URL}/algorithms`, {
       method: 'GET',
       signal: controller.signal,
     });

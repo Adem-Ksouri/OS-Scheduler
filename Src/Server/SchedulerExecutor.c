@@ -20,9 +20,11 @@ int CreateConfigFileFromJson(
 ) {
     json_object *root = json_tokener_parse(json_data);
     if (!root) {
+        fprintf(stderr, "Failed to parse JSON\n");
         return -1;
     }
     
+    // Get algorithm name
     json_object *jalgo = NULL;
     if (json_object_object_get_ex(root, "algorithm", &jalgo)) {
         const char *algo_str = json_object_get_string(jalgo);
@@ -32,6 +34,7 @@ int CreateConfigFileFromJson(
         strcpy(algorithm, "Fifo");
     }
     
+    // Get parameters with defaults
     json_object *jquantum = NULL;
     *quantum = json_object_object_get_ex(root, "quantum", &jquantum) ? 
                json_object_get_int(jquantum) : 2;
@@ -44,35 +47,36 @@ int CreateConfigFileFromJson(
     *nb_priority = json_object_object_get_ex(root, "nb_priority", &jnb_priority) ? 
                    json_object_get_int(jnb_priority) : 20;
     
+    // Get processes array
     json_object *jprocesses = NULL;
     if (!json_object_object_get_ex(root, "processes", &jprocesses)) {
+        fprintf(stderr, "No processes array found\n");
         json_object_put(root);
         return -1;
     }
     
     int nb_processes = json_object_array_length(jprocesses);
     if (nb_processes == 0) {
+        fprintf(stderr, "Empty processes array\n");
         json_object_put(root);
         return -1;
     }
     
+    // Create temporary config file
     snprintf(config_path, config_path_size, 
              "/tmp/scheduler_config_%d_%ld.txt", 
              getpid(), (long)time(NULL));
     
     FILE *f = fopen(config_path, "w");
     if (!f) {
+        fprintf(stderr, "Failed to create config file: %s\n", config_path);
         json_object_put(root);
         return -1;
     }
     
-    char *buffer = malloc(64 * 1024);
-    if (buffer) {
-        setvbuf(f, buffer, _IOFBF, 64 * 1024);
-    }
-    
     fprintf(f, "# Config: %s, Processes: %d\n\n", algorithm, nb_processes);
     
+    // Write each process
     for (int i = 0; i < nb_processes; i++) {
         json_object *jproc = json_object_array_get_idx(jprocesses, i);
         
@@ -83,29 +87,36 @@ int CreateConfigFileFromJson(
             !json_object_object_get_ex(jproc, "exec_time", &jexec) ||
             !json_object_object_get_ex(jproc, "priority", &jpriority) ||
             !json_object_object_get_ex(jproc, "nbEvents", &jnbevents)) {
+            fprintf(stderr, "Missing required process fields for process %d\n", i);
             fclose(f);
-            if (buffer) free(buffer);
             remove(config_path);
             json_object_put(root);
             return -1;
         }
+        
+        int nbEvents = json_object_get_int(jnbevents);
         
         fprintf(f, "%s %d %d %d %d",
                 json_object_get_string(jname),
                 json_object_get_int(jarrival),
                 json_object_get_int(jexec),
                 json_object_get_int(jpriority),
-                json_object_get_int(jnbevents));
+                nbEvents);
         
+        // Write events - frontend sends {t, comment} but backend expects {time, comment}
         json_object *jevents = NULL;
         if (json_object_object_get_ex(jproc, "events", &jevents)) {
-            int nb_events = json_object_array_length(jevents);
-            for (int j = 0; j < nb_events; j++) {
+            int event_count = json_object_array_length(jevents);
+            for (int j = 0; j < event_count && j < nbEvents; j++) {
                 json_object *jevent = json_object_array_get_idx(jevents, j);
                 json_object *jtime, *jcomment;
                 
-                if (json_object_object_get_ex(jevent, "time", &jtime) &&
-                    json_object_object_get_ex(jevent, "comment", &jcomment)) {
+                // Try "t" first (frontend format), then "time" (backend format)
+                if (!json_object_object_get_ex(jevent, "t", &jtime)) {
+                    json_object_object_get_ex(jevent, "time", &jtime);
+                }
+                
+                if (json_object_object_get_ex(jevent, "comment", &jcomment) && jtime) {
                     fprintf(f, " %d %s",
                             json_object_get_int(jtime),
                             json_object_get_string(jcomment));
@@ -117,7 +128,6 @@ int CreateConfigFileFromJson(
     }
     
     fclose(f);
-    if (buffer) free(buffer);
     json_object_put(root);
     
     return 0;
@@ -138,6 +148,8 @@ char* RunSchedulerAndCaptureOutput(
              quantum,
              cpu_limit,
              nb_priority);
+    
+    fprintf(stderr, "Executing: %s\n", command);
     
     FILE *pipe = popen(command, "r");
     if (!pipe) {
@@ -176,14 +188,27 @@ char* RunSchedulerAndCaptureOutput(
     result[total_read] = '\0';
     
     int status = pclose(pipe);
+    
+    fprintf(stderr, "Scheduler exit status: %d\n", status);
+    fprintf(stderr, "Scheduler output length: %zu\n", total_read);
+    
+    if (total_read > 0) {
+        fprintf(stderr, "First 200 chars of output: %.200s\n", result);
+    }
+    
     remove(config_path);
     
-    if (status != 0 || total_read == 0) {
+    if (status != 0) {
+        fprintf(stderr, "Scheduler failed with status %d\n", status);
+        fprintf(stderr, "Output: %s\n", result);
         free(result);
         return CreateErrorResponse("Scheduler execution failed");
     }
     
-    // Simply return the scheduler output directly
-    // The scheduler should already be returning the complete JSON with all process details
+    if (total_read == 0) {
+        free(result);
+        return CreateErrorResponse("Scheduler produced no output");
+    }
+    
     return result;
 }

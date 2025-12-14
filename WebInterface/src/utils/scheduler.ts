@@ -1,22 +1,30 @@
 import { Process, Execute, AlgorithmInfo } from './types';
 import { scheduleProcesses, getServerStatus } from './api';
 
-/**
- * Run scheduler using the API
- * Falls back to static data if API fails
- */
+// Helper function to convert algorithm ID to name
+function getAlgorithmNameById(algorithmId: number, algorithms: AlgorithmInfo[]): string {
+  const algo = algorithms.find(a => a.id === algorithmId);
+  return algo?.name || 'Fifo'; // Default to Fifo if not found
+}
+
 export async function runScheduler(
   processes: Process[],
-  algorithmId: number,  // Changed from string to number
+  algorithmId: number,  // Receives ID
   quantum: number = 4,
-  nbPriority?: number,        // Changed parameter name
+  nbPriority?: number,
   cpuUsageLimit?: number
 ): Promise<Execute[]> {
   
   try {
+    // Get available algorithms to map ID to name
+    const algorithms = await getAvailableAlgorithms();
+    const algorithmName = getAlgorithmNameById(algorithmId, algorithms);
+    
+    console.log(`Running scheduler with algorithm: ${algorithmName} (ID: ${algorithmId})`);
+    
     const executes = await scheduleProcesses(
       processes, 
-      algorithmId, 
+      algorithmName,  // Pass the name, not the ID
       quantum,
       nbPriority,
       cpuUsageLimit
@@ -28,10 +36,6 @@ export async function runScheduler(
   }
 }
 
-/**
- * Static fallback data - always returns the same result
- * regardless of input
- */
 function getStaticFallbackData(): Execute[] {
   return [
     {

@@ -1,3 +1,4 @@
+// ============================================================
 export interface CPUEvent {
   t: number;          
   comment: string;    
@@ -20,14 +21,14 @@ export interface Execute {
   p: Process;
   ts: number;         
   te: number;   
-  event_count:number;      
+  event_count: number;      
   events: CPUEvent[];
 }
 
-// Updated to match new API structure
+// Updated to use algorithm name instead of ID
 export interface AlgorithmInfo {
-  id: number;  // Changed from string to number
-  name: string;
+  id: number;
+  name: string;  // This is what we'll send to the backend
   params: {
     quantum?: boolean;
     nb_priority?: boolean;

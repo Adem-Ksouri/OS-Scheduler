@@ -3,15 +3,12 @@
 #include <microhttpd.h>
 #include "../../Include/HttpServer.h"
 #include "../../Include/RequestHandler.h"
-#include "../../Include/AlgorithmCache.h"
 
 #define PORT 8080
 #define THREAD_POOL_SIZE 4
 
 int StartHttpServer(void) {
     struct MHD_Daemon *daemon;
-    
-    InitAlgorithmCache();
     
     printf("Starting HTTP server on port %d...\n", PORT);
     
@@ -27,7 +24,6 @@ int StartHttpServer(void) {
     
     if (!daemon) {
         fprintf(stderr, "Failed to start server on port %d\n", PORT);
-        CleanupAlgorithmCache();
         return 1;
     }
     
@@ -37,8 +33,6 @@ int StartHttpServer(void) {
     
     printf("Shutting down server...\n");
     MHD_stop_daemon(daemon);
-    
-    CleanupAlgorithmCache();
     
     printf("Server stopped.\n");
     
