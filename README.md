@@ -10,7 +10,7 @@ A comprehensive, interactive web-based operating system scheduler simulator with
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Features](#-features)
 - [Architecture](#-architecture)
@@ -24,7 +24,7 @@ A comprehensive, interactive web-based operating system scheduler simulator with
 
 ---
 
-## 🎯 Features
+##  Features
 
 - **4 Scheduling Algorithms**: FIFO, Round Robin, Preemptive Priority, Multilevel Queue
 - **Real-time Visualization**: Animated Gantt charts showing process execution
@@ -34,7 +34,7 @@ A comprehensive, interactive web-based operating system scheduler simulator with
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### System Overview
 
@@ -57,7 +57,7 @@ The simulator consists of two main components:
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 ```bash
@@ -100,7 +100,7 @@ npm run dev
 
 ---
 
-## 📖 Usage
+##  Usage
 
 ### Web Interface
 1. **Configure Processes**: Add processes with arrival time, execution time, priority
@@ -131,7 +131,7 @@ make run-original
 
 ---
 
-## 📊 Algorithms
+##  Algorithms
 
 ### 1. FIFO (First-In-First-Out)
 - Executes processes in arrival order
@@ -159,7 +159,7 @@ make run-original
 
 ---
 
-## 🔌 API
+##  API
 
 ### Get Algorithms
 ```http
@@ -191,7 +191,7 @@ Content-Type: application/json
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Process Config File Format
 ```text
@@ -203,7 +203,7 @@ P3 2 8 3 0
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 ### Backend Tests
 ```bash
@@ -213,7 +213,7 @@ make test
 
 ---
 
-## 📄 License
+##  License
 
 MIT License - see LICENSE file for details
 
