@@ -10,7 +10,7 @@ import { initializeProcessStates } from '../utils/processHelpers';
 
 interface SimulatorInterfaceProps {
   processes: Process[];
-  algorithmId: number;  // Changed from string to number
+  algorithmId: number;  
   quantum: number;
   nbPriority: number;
   cpuUsageLimit: number;

@@ -31,7 +31,7 @@ int parser(FILE *f, process* tab, int *nbProc) {
         
         int parsed = sscanf(line_ptr, "%s %d %d %d %d", name, &arrival, &exec_time, &priority, &nbEvents);
         if (parsed != 5) {
-            return -1; // Format error
+            return -1;
         }
 
         tab[*nbProc].pid = *nbProc + 1;
@@ -49,7 +49,7 @@ int parser(FILE *f, process* tab, int *nbProc) {
         } else {
             tab[*nbProc].events = (event*)malloc(nbEvents * sizeof(event));
             if (tab[*nbProc].events == NULL) {
-                return -1; // Memory allocation error
+                return -1; 
             }
             
             char line_copy[MAX_LINE];
@@ -63,7 +63,7 @@ int parser(FILE *f, process* tab, int *nbProc) {
             for (int event_idx = 0; event_idx < nbEvents; event_idx++) {
                 if (token == NULL) {
                     free(tab[*nbProc].events);
-                    return -1; // Not enough tokens for events
+                    return -1; 
                 }
                 
                 tab[*nbProc].events[event_idx].t = atoi(token);
@@ -71,7 +71,7 @@ int parser(FILE *f, process* tab, int *nbProc) {
                 
                 if (token == NULL) {
                     free(tab[*nbProc].events);
-                    return -1; // Missing comment
+                    return -1; 
                 }
                 
                 strcpy(tab[*nbProc].events[event_idx].comment, token);

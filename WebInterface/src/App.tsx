@@ -6,24 +6,30 @@ import { Process } from './utils/types';
 export default function App() {
   const [simulationStarted, setSimulationStarted] = useState(false);
   const [processes, setProcesses] = useState<Process[]>([]);
-  const [algorithmId, setAlgorithmId] = useState<string>('');
+  const [algorithmId, setAlgorithmId] = useState<number>(1); 
   const [quantum, setQuantum] = useState(4);
+  const [nbPriority, setNbPriority] = useState(3);
+  const [cpuUsageLimit, setCpuUsageLimit] = useState(2);
 
   const handleStartSimulation = (
     procs: Process[],
-    algoId: string,
-    q: number
+    algoId: number, 
+    q: number,
+    nbPrio: number,
+    cpuLimit: number
   ) => {
     setProcesses(procs);
     setAlgorithmId(algoId);
     setQuantum(q);
+    setNbPriority(nbPrio);
+    setCpuUsageLimit(cpuLimit);
     setSimulationStarted(true);
   };
 
   const handleReset = () => {
     setSimulationStarted(false);
     setProcesses([]);
-    setAlgorithmId('');
+    setAlgorithmId(1);
   };
 
   return (
@@ -35,6 +41,8 @@ export default function App() {
           processes={processes}
           algorithmId={algorithmId}
           quantum={quantum}
+          nbPriority={nbPriority}
+          cpuUsageLimit={cpuUsageLimit}
           onReset={handleReset}
         />
       )}

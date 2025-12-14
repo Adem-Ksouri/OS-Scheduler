@@ -8,7 +8,7 @@ import { getAvailableAlgorithms } from '../utils/scheduler';
 interface SetupPanelProps {
   onStartSimulation: (
     processes: Process[],
-    algorithmId: number,  // Changed from string to number
+    algorithmId: number,  
     quantum: number,
     nbPriority: number,
     cpuUsageLimit: number
@@ -78,25 +78,28 @@ export function SetupPanel({ onStartSimulation }: SetupPanelProps) {
   ]);
   
   const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
-  const [selectedAlgorithmId, setSelectedAlgorithmId] = useState<number>(1);  // Changed to number
+  const [selectedAlgorithmId, setSelectedAlgorithmId] = useState<number>(1);  
   const [quantum, setQuantum] = useState(4);
   const [isLoadingAlgorithms, setIsLoadingAlgorithms] = useState(true);
   const [nbPriority, setNbPriority] = useState(3);
   const [cpuUsageLimit, setCpuUsageLimit] = useState(2);
 
-  useEffect(() => {
-    const fetchAlgorithms = async () => {
-      setIsLoadingAlgorithms(true);
-      const algos = await getAvailableAlgorithms();
-      setAlgorithms(algos);
-      if (algos.length > 0) {
-        setSelectedAlgorithmId(algos[0].id);
-      }
-      setIsLoadingAlgorithms(false);
-    };
-    fetchAlgorithms();
-  }, []);
-
+useEffect(() => {
+  const fetchAlgorithms = async () => {
+    setIsLoadingAlgorithms(true);
+    const algos = await getAvailableAlgorithms();
+    setAlgorithms(algos);
+    if (algos.length > 0) {
+      const fifoAlgo = algos.find(a => 
+        a.name.toLowerCase().includes('fifo') || 
+        a.name.toLowerCase().includes('fcfs')
+      );
+      setSelectedAlgorithmId(fifoAlgo ? fifoAlgo.id : algos[0].id);
+    }
+    setIsLoadingAlgorithms(false);
+  };
+  fetchAlgorithms();
+}, []);
   const handleGenerateRandom = () => {
     const newProcesses = generateRandomProcesses();
     setProcesses(newProcesses);

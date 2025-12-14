@@ -13,7 +13,7 @@ export interface ScheduleResponse {
 
 export interface ScheduleRequest {
   processes: Process[];
-  algorithm: string;  // Send algorithm name as string
+  algorithm: string;  
   quantum?: number;
   nb_priority?: number;
   cpu_usage_limit?: number;

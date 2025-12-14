@@ -22,12 +22,12 @@ event* getEvents(process p, int tl, int tr, int* out_count) {
     int count = 0;
 
     for (int i = 0; i < p.nbEvents; i++) {
-        // Check if event time falls within [tl, tr)
+      
         int event_time = p.events[i].t;
         
         if (event_time >= tl && event_time < tr) {
             result = realloc(result, (count + 1) * sizeof(event));
-            result[count].t = event_time;  // Store relative time
+            result[count].t = event_time;
             strcpy(result[count].comment, p.events[i].comment);
             count++;
         }

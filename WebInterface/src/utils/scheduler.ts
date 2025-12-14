@@ -1,22 +1,20 @@
 import { Process, Execute, AlgorithmInfo } from './types';
 import { scheduleProcesses, getServerStatus } from './api';
 
-// Helper function to convert algorithm ID to name
 function getAlgorithmNameById(algorithmId: number, algorithms: AlgorithmInfo[]): string {
   const algo = algorithms.find(a => a.id === algorithmId);
-  return algo?.name || 'Fifo'; // Default to Fifo if not found
+  return algo?.name || 'Fifo'; 
 }
 
 export async function runScheduler(
   processes: Process[],
-  algorithmId: number,  // Receives ID
+  algorithmId: number, 
   quantum: number = 4,
   nbPriority?: number,
   cpuUsageLimit?: number
 ): Promise<Execute[]> {
   
   try {
-    // Get available algorithms to map ID to name
     const algorithms = await getAvailableAlgorithms();
     const algorithmName = getAlgorithmNameById(algorithmId, algorithms);
     
@@ -24,7 +22,7 @@ export async function runScheduler(
     
     const executes = await scheduleProcesses(
       processes, 
-      algorithmName,  // Pass the name, not the ID
+      algorithmName,  
       quantum,
       nbPriority,
       cpuUsageLimit

@@ -1,4 +1,3 @@
-// ============================================================
 export interface CPUEvent {
   t: number;          
   comment: string;    
@@ -24,11 +23,9 @@ export interface Execute {
   event_count: number;      
   events: CPUEvent[];
 }
-
-// Updated to use algorithm name instead of ID
 export interface AlgorithmInfo {
   id: number;
-  name: string;  // This is what we'll send to the backend
+  name: string;  
   params: {
     quantum?: boolean;
     nb_priority?: boolean;

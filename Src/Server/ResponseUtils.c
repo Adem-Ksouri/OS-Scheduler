@@ -25,7 +25,6 @@ char* CreateErrorResponse(const char *error_message) {
     return response;
 }
 
-// Detect algorithms directly without cache
 static int DetectAvailableAlgorithms(const char *schedulers_path, json_object *array) {
     DIR *dir = opendir(schedulers_path);
     if (!dir) {
@@ -48,7 +47,6 @@ static int DetectAvailableAlgorithms(const char *schedulers_path, json_object *a
             strncpy(name, entry->d_name, len - 2);
             name[len - 2] = '\0';
             
-            // Skip main and test files
             if (strcmp(name, "main") == 0 || strcmp(name, "test") == 0) {
                 continue;
             }
@@ -56,11 +54,9 @@ static int DetectAvailableAlgorithms(const char *schedulers_path, json_object *a
             json_object *algo = json_object_new_object();
             json_object_object_add(algo, "id", json_object_new_int(id++));
             json_object_object_add(algo, "name", json_object_new_string(name));
-            
-            // Create params object
+  
             json_object *params = json_object_new_object();
             
-            // Determine parameters based on algorithm name
             if (strcasecmp(name, "RoundRobin") == 0 || strcasecmp(name, "rr") == 0) {
                 json_object_object_add(params, "quantum", json_object_new_boolean(1));
             }
@@ -95,7 +91,6 @@ char* GetAlgorithmsJson(void) {
     int count = DetectAvailableAlgorithms(schedulers_path, array);
     
     if (count == 0) {
-        // Add default algorithms if directory scan failed
         json_object *fifo = json_object_new_object();
         json_object_object_add(fifo, "id", json_object_new_int(1));
         json_object_object_add(fifo, "name", json_object_new_string("Fifo"));

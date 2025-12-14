@@ -1,4 +1,3 @@
-// Include/RequestHandler.h
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
@@ -9,9 +8,7 @@ struct ConnectionInfo {
     size_t size;
 };
 
-/**
- * Main request handler for MHD
- */
+
 enum MHD_Result HandleRequest(
     void *cls,
     struct MHD_Connection *connection,
@@ -23,9 +20,6 @@ enum MHD_Result HandleRequest(
     void **con_cls
 );
 
-/**
- * Cleanup handler called when request is completed
- */
 void RequestCompleted(
     void *cls,
     struct MHD_Connection *connection,
@@ -33,4 +27,4 @@ void RequestCompleted(
     enum MHD_RequestTerminationCode toe
 );
 
-#endif // REQUEST_HANDLER_H
+#endif 

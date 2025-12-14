@@ -84,7 +84,7 @@ export function GanttChart({
               minHeight: `${RULER_HEIGHT + processes.length * ROW_HEIGHT + 40}px`,
             }}
           >
-            {/* TIME RULER */}
+          
             <div
               className="sticky top-0 z-20 bg-slate-50 border-b-2 border-slate-300"
               style={{ height: `${RULER_HEIGHT}px` }}
@@ -114,7 +114,7 @@ export function GanttChart({
               </div>
             </div>
 
-            {/* VERTICAL GRID LINES */}
+          
             <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none z-0">
               {timeTicks.map((time) => {
                 const xPos = LEFT_PADDING + time * PX_PER_UNIT;
@@ -173,7 +173,6 @@ export function GanttChart({
                         block.endTime >= currentTime - 1 &&
                         block.startTime < currentTime;
 
-                      // Calculate CPU event markers
                       const cpuEventMarkers = calculateEventMarkers(
                         process,
                         block,
@@ -198,7 +197,7 @@ export function GanttChart({
               })}
             </div>
 
-            {/* CURRENT TIME MARKER */}
+           
             {currentTime > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -302,7 +301,7 @@ function calculateEventMarkers(
   return markers;
 }
 
-// EventSegment component
+
 interface EventSegmentProps {
   block: GanttBlock;
   startX: number;

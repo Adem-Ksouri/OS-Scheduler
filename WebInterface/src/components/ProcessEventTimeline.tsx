@@ -35,7 +35,7 @@ export function ProcessEventTimeline({
       <div className="space-y-6">
         {executes.map((execute) => {
           const color = processColors.get(execute.p.pid) || '#3b82f6';
-          // Calculate duration and width based on ts/te times
+          
           const duration = execute.te - execute.ts;
           const timelineWidth = duration * PX_PER_UNIT;
 
@@ -46,7 +46,7 @@ export function ProcessEventTimeline({
               animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-r from-slate-50 to-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-x-hidden"
             >
-              {/* Process Header */}
+              
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className="w-5 h-5 rounded-md shadow-sm"
@@ -60,16 +60,15 @@ export function ProcessEventTimeline({
                 </div>
               </div>
 
-              {/* Timeline Container */}
+              
               <div className="relative overflow-x-auto pb-2">
                 <div
                   className="relative h-12 bg-slate-100 rounded-lg border border-slate-300 shadow-inner"
                   style={{ width: `${timelineWidth}px`, minWidth: '300px' }}
                 >
-                  {/* Gradient Background */}
+                  
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 opacity-60 rounded-lg" />
 
-                  {/* Time Grid Markers - Show absolute times */}
                   {Array.from({ length: duration + 1 }).map((_, i) => {
                     const absoluteTime = execute.ts + i;
                     return (
@@ -85,9 +84,9 @@ export function ProcessEventTimeline({
                     );
                   })}
 
-                  {/* Event Markers - Position using backend ti values */}
+               
                   {execute.events.map((event, index) => {
-                    // Convert absolute time (ti) to relative position on this process timeline
+                   
                     const relativePosition = (event.t - execute.ts) * PX_PER_UNIT;
                     const isHovered =
                       hoveredEvent?.pid === execute.p.pid &&
@@ -96,7 +95,7 @@ export function ProcessEventTimeline({
 
                     return (
                       <div key={index}>
-                        {/* Vertical Line Marker */}
+                       
                         <motion.div
                           initial={{ scaleY: 0, opacity: 0 }}
                           animate={{ scaleY: 1, opacity: 1 }}
@@ -118,7 +117,7 @@ export function ProcessEventTimeline({
                           onMouseLeave={() => setHoveredEvent(null)}
                         />
 
-                        {/* Event Dot */}
+                      
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{
@@ -141,7 +140,6 @@ export function ProcessEventTimeline({
                           onMouseLeave={() => setHoveredEvent(null)}
                         />
 
-                        {/* Tooltip */}
                         {(isHovered || isActive) && (
                           <motion.div
                             initial={{ opacity: 0, y: -5 }}
@@ -159,7 +157,7 @@ export function ProcessEventTimeline({
                             <div className="text-[10px] text-slate-400 mt-1">
                               Time: {event.t}
                             </div>
-                            {/* Tooltip Arrow */}
+                          
                             <div
                               className="absolute w-2 h-2 bg-slate-900 transform rotate-45"
                               style={{
@@ -174,7 +172,6 @@ export function ProcessEventTimeline({
                     );
                   })}
 
-                  {/* Current Time Indicator */}
                   {currentTime >= execute.ts && currentTime <= execute.te && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -189,7 +186,6 @@ export function ProcessEventTimeline({
                   )}
                 </div>
 
-                {/* Timeline Info */}
                 <div className="text-xs text-slate-400 mt-6 text-center">
                   Timeline scale: 1 unit = {PX_PER_UNIT}px
                 </div>

@@ -15,10 +15,9 @@ execute* fifo_scheduler(process* processes, int n, int* out_count) {
         int te = ts + processes[i].exec_time;
         
         int event_count = 0;
-        // Get events for the entire process execution (offset 0 to exec_time)
-        event* filtered_events = getEvents(processes[i], 0, processes[i].exec_time, &event_count);
         
-        // Convert event times from process-relative to wall-clock time
+        event* filtered_events = getEvents(processes[i], 0, processes[i].exec_time, &event_count);
+      
         for (int j = 0; j < event_count; j++) {
             filtered_events[j].t = ts + filtered_events[j].t;
         }

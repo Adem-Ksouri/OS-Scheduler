@@ -24,7 +24,6 @@ int CreateConfigFileFromJson(
         return -1;
     }
     
-    // Get algorithm name
     json_object *jalgo = NULL;
     if (json_object_object_get_ex(root, "algorithm", &jalgo)) {
         const char *algo_str = json_object_get_string(jalgo);
@@ -34,7 +33,6 @@ int CreateConfigFileFromJson(
         strcpy(algorithm, "Fifo");
     }
     
-    // Get parameters with defaults
     json_object *jquantum = NULL;
     *quantum = json_object_object_get_ex(root, "quantum", &jquantum) ? 
                json_object_get_int(jquantum) : 2;
@@ -47,7 +45,6 @@ int CreateConfigFileFromJson(
     *nb_priority = json_object_object_get_ex(root, "nb_priority", &jnb_priority) ? 
                    json_object_get_int(jnb_priority) : 20;
     
-    // Get processes array
     json_object *jprocesses = NULL;
     if (!json_object_object_get_ex(root, "processes", &jprocesses)) {
         fprintf(stderr, "No processes array found\n");
@@ -62,7 +59,6 @@ int CreateConfigFileFromJson(
         return -1;
     }
     
-    // Create temporary config file
     snprintf(config_path, config_path_size, 
              "/tmp/scheduler_config_%d_%ld.txt", 
              getpid(), (long)time(NULL));
@@ -76,7 +72,6 @@ int CreateConfigFileFromJson(
     
     fprintf(f, "# Config: %s, Processes: %d\n\n", algorithm, nb_processes);
     
-    // Write each process
     for (int i = 0; i < nb_processes; i++) {
         json_object *jproc = json_object_array_get_idx(jprocesses, i);
         
@@ -102,8 +97,7 @@ int CreateConfigFileFromJson(
                 json_object_get_int(jexec),
                 json_object_get_int(jpriority),
                 nbEvents);
-        
-        // Write events - frontend sends {t, comment} but backend expects {time, comment}
+       
         json_object *jevents = NULL;
         if (json_object_object_get_ex(jproc, "events", &jevents)) {
             int event_count = json_object_array_length(jevents);
@@ -111,7 +105,6 @@ int CreateConfigFileFromJson(
                 json_object *jevent = json_object_array_get_idx(jevents, j);
                 json_object *jtime, *jcomment;
                 
-                // Try "t" first (frontend format), then "time" (backend format)
                 if (!json_object_object_get_ex(jevent, "t", &jtime)) {
                     json_object_object_get_ex(jevent, "time", &jtime);
                 }

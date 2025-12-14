@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   
     choice[strcspn(choice, "\n")] = '\0';
     
-    // Trim spaces
+  
     char* end = choice + strlen(choice) - 1;
     while (end > choice && isspace((unsigned char)*end)) {
         *end = '\0';

@@ -12,8 +12,8 @@ interface SimulationControlsProps {
   onStep: () => void;
   onRestart: () => void;
   onSpeedChange: (speed: number) => void;
-  onAlgorithmChange: (algorithmId: number) => void;  // Changed from string to number
-  currentAlgorithmId: number;  // Changed from string to number
+  onAlgorithmChange: (algorithmId: number) => void;  
+  currentAlgorithmId: number;  
   quantum?: number;
   onQuantumChange?: (quantum: number) => void;
   nbPriority?: number;
