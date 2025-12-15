@@ -74,7 +74,7 @@ node --version  # Should be 18+
 ### Installation
 ```bash
 # Clone repository
-git clone <your-repo-url>
+git clone https://github.com/Adem-Ksouri/OS-Scheduler
 cd os-scheduler-simulator
 ./configure --disable-examples
 make -j$(nproc)
